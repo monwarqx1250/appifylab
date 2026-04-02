@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+
+  posts    Post[]
+  comments Comment[]
+  likes    Like[]
+}
+
+model Post {
+  id         String   @id @default(uuid())
+  content    String
+  visibility String   @default("public") // 'public' | 'private'
+  authorId   String
+  createdAt  DateTime @default(now())
+
+  author      User             @relation(fields: [authorId], references: [id])
+  attachments PostAttachment[]
+  comments    Comment[]
+  likes       Like[]
+}
+
+model PostAttachment {
+  id        String   @id @default(uuid())
+  postId    String
+  fileUrl   String
+  fileType  String
+  createdAt DateTime @default(now())
+
+  post Post @relation(fields: [postId], references: [id])
+}
+
+model Comment {
+  id        String   @id @default(uuid())
+  content   String
+  postId    String
+  authorId  String
+  parentId  String?
+  createdAt DateTime @default(now())
+
+  post    Post      @relation(fields: [postId], references: [id])
+  author  User      @relation(fields: [authorId], references: [id])
+  parent  Comment?  @relation("CommentToReply", fields: [parentId], references: [id])
+  replies Comment[] @relation("CommentToReply")
+  likes   Like[]
+}
+
+model Like {
+  id         String   @id @default(uuid())
+  userId     String
+  entityId   String // Can represent postId or commentId
+  entityType String // 'post' | 'comment'
+  createdAt  DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  // Application-level polymorphic relation
+  // post       Post?    @relation(...)
+  // comment    Comment? @relation(...)
+  post      Post?    @relation(fields: [postId], references: [id])
+  postId    String?
+  comment   Comment? @relation(fields: [commentId], references: [id])
+  commentId String?
+
+  @@unique([userId, entityId, entityType])
+}
