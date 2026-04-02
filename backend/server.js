@@ -2,20 +2,20 @@ require('dotenv').config();
 const Fastify = require('fastify');
 const appService = require('./app');
 
-// Instantiate Fastify
 const fastify = Fastify({
   logger: true,
 });
 
-// Register the app built by app.js
 fastify.register(appService);
+
 fastify.get('/', async (req, reply) => {
-  reply.send({ message: 'Hello World!' });
+  reply.send({
+    "message": "Welcome to the API. Please use /docs for API documentation."
+  });
 });
-// Export for testing
+
 module.exports = fastify;
 
-// Start server only when this file is run directly
 if (require.main === module) {
   const start = async () => {
     try {

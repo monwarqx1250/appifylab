@@ -1,4 +1,7 @@
 const registerSchema = {
+  tags: ['auth'],
+  summary: 'Register a new user',
+  description: 'Creates a new user account and returns a JWT token.',
   body: {
     type: 'object',
     required: ['firstName', 'lastName', 'email', 'password'],
@@ -24,11 +27,26 @@ const registerSchema = {
           }
         }
       }
+    },
+    409: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
     }
   }
 };
 
 const loginSchema = {
+  tags: ['auth'],
+  summary: 'Login',
+  description: 'Authenticates a user and returns a JWT token.',
   body: {
     type: 'object',
     required: ['email', 'password'],
@@ -51,6 +69,18 @@ const loginSchema = {
             lastName: { type: 'string' }
           }
         }
+      }
+    },
+    401: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    },
+    500: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
       }
     }
   }

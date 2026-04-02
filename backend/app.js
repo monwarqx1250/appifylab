@@ -3,7 +3,6 @@ const AutoLoad = require('@fastify/autoload');
 const cors = require('@fastify/cors');
 
 module.exports = async function (fastify, opts) {
-  // Config CORS
   await fastify.register(cors, {
     origin: '*',
   });
