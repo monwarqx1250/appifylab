@@ -1,60 +1,61 @@
-'use client'
-import React, { useState } from 'react';
+'use client';
+
+import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import AuthForm from '@/components/auth/AuthForm';
+import { persistAuthSession, postAuth } from '@/lib/auth';
+
+const REGISTER_FIELDS = [
+  { name: 'firstName', type: 'text', label: 'First Name', autoComplete: 'given-name' },
+  { name: 'lastName', type: 'text', label: 'Last Name', autoComplete: 'family-name' },
+  { name: 'email', type: 'email', label: 'Email', autoComplete: 'email' },
+  { name: 'password', type: 'password', label: 'Password', autoComplete: 'new-password' },
+  { name: 'confirm_password', type: 'password', label: 'Confirm Password', autoComplete: 'new-password' },
+];
 
 export default function RegisterPage() {
+  const router = useRouter();
 
-  const inputs = [
-    {
-      name: 'firstName',
-      type: 'text',
-      label: 'First Name'
-    },
-    {
-      name: 'lastName',
-      type: 'text',
-      label: 'Last Name'
-    },
-    {
-      name: 'email',
-      type: 'email',
-      label: 'Email',
-    },
-    {
-      name: 'password',
-      type: 'password',
-      label: 'Password'
-    },
-    {
-      name: 'confirm_password',
-      type: 'password',
-      label: 'Confirm Password'
+  const handleRegister = async (values) => {
+    if (values.password !== values.confirm_password) {
+      return { error: 'Passwords do not match.' };
     }
-  ]
 
-  const handleOnsubmit = async (e) => {
-    e.preventDefault();
+    const { confirm_password: _confirm, terms: _terms, ...requestBody } = values;
+    const { ok, status, data } = await postAuth('/auth/register', requestBody);
 
-    const formData = Object.fromEntries((new FormData(e.target).entries()));
+    if (ok && status === 201 && data) {
+      persistAuthSession(data);
+      router.push('/feed');
+      return;
+    }
 
-    const {confirm_password: _ , ...requestBody} = formData
+    const message =
+      data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : 'Registration failed. Please try again.';
+    return { error: message };
+  };
 
-    const auth_api_url = `${process.env.NEXT_PUBLIC_API_URL}/auth/register`;
-    console.log(requestBody)
-    console.log(auth_api_url)
-    const response = await fetch(auth_api_url, {
-      method: 'POST',
-      headers: {
-        'Content-Type':'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    })
-    if(response.status == 201) {
-      console.log("registration successfull")
-    }else{
-      console.error("something went wrong")
-    } 
-  }
+  const beforeSubmit = (
+    <div className="row">
+      <div className="col-lg-12 col-xl-12 col-md-12 col-sm-12">
+        <div className="form-check _social_registration_form_check">
+          <input
+            className="form-check-input _social_registration_form_check_input"
+            type="checkbox"
+            id="register-terms"
+            name="terms"
+            required
+          />
+          <label className="form-check-label _social_registration_form_check_label" htmlFor="register-terms">
+            I agree to terms & conditions
+          </label>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <section className="_social_registration_wrapper _layout_main_wrapper">
@@ -91,45 +92,26 @@ export default function RegisterPage() {
                 <p className="_social_registration_content_para _mar_b8">Get Started Now</p>
                 <h4 className="_social_registration_content_title _titl4 _mar_b50">Registration</h4>
                 <button type="button" className="_social_registration_content_btn _mar_b40">
-                  <img src="/assets/images/google.svg" alt="Image" className="_google_img" /> <span>Register with google</span>
+                  <img src="/assets/images/google.svg" alt="Image" className="_google_img" />{' '}
+                  <span>Register with google</span>
                 </button>
-                <div className="_social_registration_content_bottom_txt _mar_b40"> <span>Or</span>
+                <div className="_social_registration_content_bottom_txt _mar_b40">
+                  <span>Or</span>
                 </div>
-                <form className="_social_registration_form" onSubmit={handleOnsubmit}>
 
-                  {inputs.map(f =>
-                    <div className="row" key={f.name}>
-                      <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                        <div className="_social_registration_form_input _mar_b14">
-                          <label className="_social_registration_label _mar_b8">{f.label}</label>
-                          <input type={f.type} name={f.name} className="form-control _social_registration_input" />
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="row">
-                    <div className="col-lg-12 col-xl-12 col-md-12 col-sm-12">
-                      <div className="form-check _social_registration_form_check">
-                        <input className="form-check-input _social_registration_form_check_input" type="radio" id="flexRadioDefault2" defaultChecked />
-                        <label className="form-check-label _social_registration_form_check_label" htmlFor="flexRadioDefault2">I agree to terms & conditions</label>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="row">
-                    <div className="col-lg-12 col-md-12 col-xl-12 col-sm-12">
-                      <div className="_social_registration_form_btn _mar_t40 _mar_b60">
-                        <button type="submit" className="_social_registration_form_btn_link _btn1">Register now</button>
-                      </div>
-                    </div>
-                  </div>
-                </form>
+                <AuthForm
+                  variant="registration"
+                  fields={REGISTER_FIELDS}
+                  submitLabel="Register now"
+                  beforeSubmit={beforeSubmit}
+                  onSubmit={handleRegister}
+                />
 
                 <div className="row">
                   <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div className="_social_registration_bottom_txt">
-                      <p className="_social_registration_bottom_txt_para">Already have an account? <Link href="/login">Login</Link>
+                      <p className="_social_registration_bottom_txt_para">
+                        Already have an account? <Link href="/login">Login</Link>
                       </p>
                     </div>
                   </div>

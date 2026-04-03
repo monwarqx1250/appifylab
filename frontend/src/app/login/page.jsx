@@ -1,7 +1,59 @@
+'use client';
+
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import AuthForm from '@/components/auth/AuthForm';
+import { persistAuthSession, postAuth } from '@/lib/auth';
+
+const LOGIN_FIELDS = [
+  { name: 'email', type: 'email', label: 'Email', autoComplete: 'email' },
+  { name: 'password', type: 'password', label: 'Password', autoComplete: 'current-password' },
+];
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  const handleLogin = async (values) => {
+    const { email, password } = values;
+    const { ok, status, data } = await postAuth('/auth/login', { email, password });
+
+    if (ok && status === 200 && data) {
+      persistAuthSession(data);
+      router.push('/feed');
+      return;
+    }
+
+    const message =
+      data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
+        ? data.error
+        : 'Login failed. Please check your details and try again.';
+    return { error: message };
+  };
+
+  const beforeSubmit = (
+    <div className="row">
+      <div className="col-lg-6 col-xl-6 col-md-6 col-sm-12">
+        <div className="form-check _social_login_form_check">
+          <input
+            className="form-check-input _social_login_form_check_input"
+            type="checkbox"
+            name="remember"
+            id="login-remember"
+          />
+          <label className="form-check-label _social_login_form_check_label" htmlFor="login-remember">
+            Remember me
+          </label>
+        </div>
+      </div>
+      <div className="col-lg-6 col-xl-6 col-md-6 col-sm-12">
+        <div className="_social_login_form_left">
+          <p className="_social_login_form_left_para">Forgot password?</p>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <section className="_social_login_wrapper _layout_main_wrapper">
       <div className="_shape_one">
@@ -34,52 +86,26 @@ export default function LoginPage() {
                 <p className="_social_login_content_para _mar_b8">Welcome back</p>
                 <h4 className="_social_login_content_title _titl4 _mar_b50">Login to your account</h4>
                 <button type="button" className="_social_login_content_btn _mar_b40">
-                  <img src="/assets/images/google.svg" alt="Image" className="_google_img" /> <span>Or sign-in with google</span>
+                  <img src="/assets/images/google.svg" alt="Image" className="_google_img" />{' '}
+                  <span>Or sign-in with google</span>
                 </button>
-                <div className="_social_login_content_bottom_txt _mar_b40"> <span>Or</span>
+                <div className="_social_login_content_bottom_txt _mar_b40">
+                  <span>Or</span>
                 </div>
-                <form className="_social_login_form">
-                  <div className="row">
-                    <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                      <div className="_social_login_form_input _mar_b14">
-                        <label className="_social_login_label _mar_b8">Email</label>
-                        <input type="email" className="form-control _social_login_input" />
-                      </div>
-                    </div>
-                    <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-                      <div className="_social_login_form_input _mar_b14">
-                        <label className="_social_login_label _mar_b8">Password</label>
-                        <input type="password" className="form-control _social_login_input" />
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-lg-6 col-xl-6 col-md-6 col-sm-12">
-                      <div className="form-check _social_login_form_check">
-                        <input className="form-check-input _social_login_form_check_input" type="radio" name="flexRadioDefault" id="flexRadioDefault2" defaultChecked />
-                        <label className="form-check-label _social_login_form_check_label" htmlFor="flexRadioDefault2">Remember me</label>
-                      </div>
-                    </div>
-                    <div className="col-lg-6 col-xl-6 col-md-6 col-sm-12">
-                      <div className="_social_login_form_left">
-                        <p className="_social_login_form_left_para">Forgot password?</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="row">
-                    <div className="col-lg-12 col-md-12 col-xl-12 col-sm-12">
-                      <div className="_social_login_form_btn _mar_t40 _mar_b60">
-                        <Link href="/feed">
-                          <button type="button" className="_social_login_form_btn_link _btn1">Login now</button>
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                </form>
+
+                <AuthForm
+                  variant="login"
+                  fields={LOGIN_FIELDS}
+                  submitLabel="Login now"
+                  beforeSubmit={beforeSubmit}
+                  onSubmit={handleLogin}
+                />
+
                 <div className="row">
                   <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div className="_social_login_bottom_txt">
-                      <p className="_social_login_bottom_txt_para">Dont have an account? <Link href="/register">Create New Account</Link>
+                      <p className="_social_login_bottom_txt_para">
+                        Dont have an account? <Link href="/register">Create New Account</Link>
                       </p>
                     </div>
                   </div>
