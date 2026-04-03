@@ -1,11 +1,15 @@
 const path = require('path');
 const AutoLoad = require('@fastify/autoload');
 const cors = require('@fastify/cors');
+const { default: fastify } = require('fastify');
+
 
 module.exports = async function (fastify, opts) {
   await fastify.register(cors, {
     origin: '*',
   });
+
+  fastify.register(require('@fastify/multipart'))
 
   fastify.register(AutoLoad, {
     dir: path.join(__dirname, 'src', 'plugins'),

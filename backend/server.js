@@ -3,7 +3,16 @@ const Fastify = require('fastify');
 const appService = require('./app');
 
 const fastify = Fastify({
-  logger: true,
+  logger: {
+    transport : {
+      target: 'pino-pretty',
+      options: {
+        translateTime: 'HH:MM:ss',
+        ignore: 'pid,hostname',
+        colorize: true
+      }
+    }
+  }
 });
 
 fastify.register(appService);
@@ -20,7 +29,6 @@ if (require.main === module) {
   const start = async () => {
     try {
       await fastify.listen({ port: process.env.PORT || 3001, host: '0.0.0.0' });
-      fastify.log.info(`Server listening on ${fastify.server.address().port}`);
     } catch (err) {
       fastify.log.error(err);
       process.exit(1);
