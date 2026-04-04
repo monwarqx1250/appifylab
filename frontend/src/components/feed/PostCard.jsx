@@ -1,11 +1,44 @@
-import React from 'react';
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
+/*
+ * Suggested component splits (copy each REGION block into its own file when refactoring):
+ * - PostCardHeader      — author row + overflow menu (post menu trigger + dropdown list)
+ * - PostCardMedia       — post title + main timeline image
+ * - PostReactionSummary — react face pile + comment/share counts
+ * - PostActionBar       — Haha / Comment / Share buttons
+ * - CommentComposer     — avatar, textarea, attachment buttons (reuse for main + reply; pass unique textareaId)
+ * - CommentThread       — "View previous comments" + list wrapper
+ * - CommentItem         — one thread row: avatar, author, body, inline reactions, Like/Reply/Share, nested composer
+ */
 export default function PostCard() {
+	const [menuOpen, setMenuOpen] = useState(false);
+	const menuRef = useRef(null);
+
+	useEffect(() => {
+		if (!menuOpen) return;
+		function closeOnOutside(event) {
+			if (menuRef.current && !menuRef.current.contains(event.target)) {
+				setMenuOpen(false);
+			}
+		}
+		document.addEventListener('mousedown', closeOnOutside);
+		document.addEventListener('touchstart', closeOnOutside);
+		return () => {
+			document.removeEventListener('mousedown', closeOnOutside);
+			document.removeEventListener('touchstart', closeOnOutside);
+		};
+	}, [menuOpen]);
+
 	return (
 		<div className="_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16">
+			{/* REGION: PostCard — main post content column */}
 			<div className="_feed_inner_timeline_content _padd_r24 _padd_l24">
+				{/* REGION: PostCardHeader */}
 				<div className="_feed_inner_timeline_post_top">
+					{/* Author: avatar + name + visibility meta */}
 					<div className="_feed_inner_timeline_post_box">
 						<div className="_feed_inner_timeline_post_box_image">
 							<img src="assets/images/post_img.png" alt="" className="_post_img" />
@@ -17,18 +50,25 @@ export default function PostCard() {
 							</p>
 						</div>
 					</div>
-					<div className="_feed_inner_timeline_post_box_dropdown">
+					{/* Post overflow menu: toggle .show to match main.css + static custom.js behavior */}
+					<div className="_feed_inner_timeline_post_box_dropdown" ref={menuRef}>
 						<div className="_feed_timeline_post_dropdown">
-							<button href="#0" className="_feed_timeline_post_dropdown_link">
-								<svg xmlns="http://www.w3.org/2000/svg" width="4" height="17" fill="none" viewBox="0 0 4 17">
+							<button
+								type="button"
+								className="_feed_timeline_post_dropdown_link"
+								onClick={() => setMenuOpen((open) => !open)}
+								aria-expanded={menuOpen}
+								aria-haspopup="menu"
+							>
+								<svg xmlns="http://www.w3.org/2000/svg" width="4" height="17" fill="none" viewBox="0 0 4 17" aria-hidden="true">
 									<circle cx="2" cy="2" r="2" fill="#C4C4C4" />
 									<circle cx="2" cy="8" r="2" fill="#C4C4C4" />
 									<circle cx="2" cy="15" r="2" fill="#C4C4C4" />
 								</svg>
 							</button>
 						</div>
-						{/* Dropdown */}
-						<div className="_feed_timeline_dropdown">
+						{/* Menu panel (Save / Notify / Hide / Edit / Delete) */}
+						<div className={`_feed_timeline_dropdown _timeline_dropdown${menuOpen ? ' show' : ''}`}>
 							<ul className="_feed_timeline_dropdown_list">
 								<li className="_feed_timeline_dropdown_item">
 									<a href="#0" className="_feed_timeline_dropdown_link">
@@ -85,11 +125,18 @@ export default function PostCard() {
 						</div>
 					</div>
 				</div>
+				{/* END PostCardHeader */}
+
+				{/* REGION: PostCardMedia */}
 				<h4 className="_feed_inner_timeline_post_title">-Healthy Tracking App</h4>
 				<div className="_feed_inner_timeline_image">
 					<img src="assets/images/timeline_img.png" alt="" className="_time_img" />
 				</div>
+				{/* END PostCardMedia */}
 			</div>
+			{/* END main post content column */}
+
+			{/* REGION: PostReactionSummary */}
 			<div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26">
 				<div className="_feed_inner_timeline_total_reacts_image">
 					<img src="assets/images/react_img1.png" alt="Image" className="_react_img1" />
@@ -104,6 +151,9 @@ export default function PostCard() {
 					<p className="_feed_inner_timeline_total_reacts_para2"><span>122</span> Share</p>
 				</div>
 			</div>
+			{/* END PostReactionSummary */}
+
+			{/* REGION: PostActionBar */}
 			<div className="_feed_inner_timeline_reaction">
 				<button className="_feed_inner_timeline_reaction_emoji _feed_reaction _feed_reaction_active">
 					<span className="_feed_inner_timeline_reaction_link"> <span>
@@ -138,6 +188,9 @@ export default function PostCard() {
 					</span>
 				</button>
 			</div>
+			{/* END PostActionBar */}
+
+			{/* REGION: CommentComposer (main — post-level) */}
 			<div className="_feed_inner_timeline_cooment_area">
 				<div className="_feed_inner_comment_box">
 					<form className="_feed_inner_comment_box_form">
@@ -164,10 +217,14 @@ export default function PostCard() {
 					</form>
 				</div>
 			</div>
+			{/* END CommentComposer (main) */}
+
+			{/* REGION: CommentThread */}
 			<div className="_timline_comment_main">
 				<div className="_previous_comment">
 					<button type="button" className="_previous_comment_txt">View 4 previous comments</button>
 				</div>
+				{/* REGION: CommentItem (one row; map over comments in real data) */}
 				<div className="_comment_main">
 					<div className="_comment_image">
 						<a href="profile.html" className="_comment_image_link">
@@ -210,6 +267,7 @@ export default function PostCard() {
 								</div>
 							</div>
 						</div>
+						{/* CommentComposer (reply — same markup as main; extract once and reuse) */}
 						<div className="_feed_inner_comment_box">
 							<form className="_feed_inner_comment_box_form">
 								<div className="_feed_inner_comment_box_content">
@@ -236,7 +294,9 @@ export default function PostCard() {
 						</div>
 					</div>
 				</div>
+				{/* END CommentItem */}
 			</div>
+			{/* END CommentThread */}
 		</div>
 	);
 }
