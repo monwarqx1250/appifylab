@@ -71,4 +71,18 @@ module.exports = async function (fastify, opts) {
       reply.code(500).send({ error: 'Internal Server Error' });
     }
   });
+
+  fastify.get('/posts/:id', async (request, reply) => {
+    try {
+      const { id } = request.params;
+      const post = await postsService.getPostById(id);
+      if (!post) {
+        return reply.code(404).send({ error: 'Post not found' });
+      }
+      reply.code(200).send(post);
+    } catch (err) {
+      fastify.log.error(err);
+      reply.code(500).send({ error: 'Internal Server Error' });
+    }
+  });
 };
