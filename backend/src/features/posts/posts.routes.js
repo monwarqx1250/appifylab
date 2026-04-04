@@ -11,7 +11,7 @@ module.exports = async function (fastify, opts) {
       tags: ['posts'],
       summary: 'Create a new post',
       description: 'Creates a new post with optional file attachments. Requires JWT authentication.',
-      consumes: ['multipart/form-data'],
+      consumes: ['multipart/form-data', 'application/json'],
       response: {
         201: {
           description: 'Post created successfully',
@@ -52,7 +52,15 @@ module.exports = async function (fastify, opts) {
     }
   }, async (request, reply) => {
     try {
-      const body = await fastify.normalizeMultipart(request)
+      let body;
+      const contentType = request.headers['content-type'] || '';
+      
+      if (contentType.includes('multipart/form-data')) {
+        body = await fastify.normalizeMultipart(request);
+      } else {
+        body = request.body;
+      }
+      
       const post = await postsService.createPost(request.user.id, body)
       reply.code(201).send(post)
     } catch (err) {
