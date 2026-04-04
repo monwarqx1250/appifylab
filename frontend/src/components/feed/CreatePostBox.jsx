@@ -159,7 +159,7 @@ export default function CreatePostBox({ onPostCreated }) {
 						</button>
 					</div>
 				</div>
-				<div className="_feed_inner_text_area_btn">
+				<div className="_feed_inner_text_area_btn" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
 					<div style={{ position: 'relative' }} ref={visibilityRef}>
 						<button 
 							type="button" 
@@ -193,7 +193,7 @@ export default function CreatePostBox({ onPostCreated }) {
 							<div style={{
 								position: 'absolute',
 								bottom: '100%',
-								right: 0,
+								left: 0,
 								marginBottom: '4px',
 								background: 'white',
 								border: '1px solid #ddd',
