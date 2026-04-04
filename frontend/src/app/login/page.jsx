@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthForm from '@/components/auth/AuthForm';
 import { persistAuthSession, postAuth } from '@/lib/auth';
+import { ToastProvider, useToast } from '@/components/ui/Toast';
 
 const LOGIN_FIELDS = [
   { name: 'email', type: 'email', label: 'Email', autoComplete: 'email' },
@@ -12,14 +13,25 @@ const LOGIN_FIELDS = [
 ];
 
 export default function LoginPage() {
+  return (
+    <ToastProvider>
+      <LoginContent />
+    </ToastProvider>
+  );
+}
+
+function LoginContent() {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const handleLogin = async (values) => {
     const { email, password } = values;
+
     const { ok, status, data } = await postAuth('/auth/login', { email, password });
 
     if (ok && status === 200 && data) {
       persistAuthSession(data);
+      showToast('Login successful!', 'success');
       router.push('/feed');
       return;
     }
@@ -28,7 +40,7 @@ export default function LoginPage() {
       data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
         ? data.error
         : 'Login failed. Please check your details and try again.';
-    return { error: message };
+    showToast(message, 'error');
   };
 
   const beforeSubmit = (
@@ -99,6 +111,13 @@ export default function LoginPage() {
                   submitLabel="Login now"
                   beforeSubmit={beforeSubmit}
                   onSubmit={handleLogin}
+                  validate={(v) => {
+                    const { email, password } = v;
+                    if (!email?.trim()) return false;
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+                    if (!password) return false;
+                    return true;
+                  }}
                 />
 
                 <div className="row">

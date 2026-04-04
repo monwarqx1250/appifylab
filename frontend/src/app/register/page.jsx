@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthForm from '@/components/auth/AuthForm';
 import { persistAuthSession, postAuth } from '@/lib/auth';
+import { ToastProvider, useToast } from '@/components/ui/Toast';
 
 const REGISTER_FIELDS = [
   { name: 'firstName', type: 'text', label: 'First Name', autoComplete: 'given-name' },
@@ -15,18 +16,24 @@ const REGISTER_FIELDS = [
 ];
 
 export default function RegisterPage() {
+  return (
+    <ToastProvider>
+      <RegisterContent />
+    </ToastProvider>
+  );
+}
+
+function RegisterContent() {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const handleRegister = async (values) => {
-    if (values.password !== values.confirm_password) {
-      return { error: 'Passwords do not match.' };
-    }
-
     const { confirm_password: _confirm, terms: _terms, ...requestBody } = values;
     const { ok, status, data } = await postAuth('/auth/register', requestBody);
 
     if (ok && status === 201 && data) {
       persistAuthSession(data);
+      showToast('Registration successful!', 'success');
       router.push('/feed');
       return;
     }
@@ -35,7 +42,7 @@ export default function RegisterPage() {
       data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
         ? data.error
         : 'Registration failed. Please try again.';
-    return { error: message };
+    showToast(message, 'error');
   };
 
   const beforeSubmit = (
@@ -105,6 +112,19 @@ export default function RegisterPage() {
                   submitLabel="Register now"
                   beforeSubmit={beforeSubmit}
                   onSubmit={handleRegister}
+                  validate={(v) => {
+                    const { firstName, lastName, email, password, confirm_password, terms } = v;
+                    if (!firstName?.trim()) return false;
+                    if (!lastName?.trim()) return false;
+                    if (!email?.trim()) return false;
+                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return false;
+                    if (!password) return false;
+                    if (password.length < 8) return false;
+                    if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(password)) return false;
+                    if (password !== confirm_password) return false;
+                    if (!terms) return false;
+                    return true;
+                  }}
                 />
 
                 <div className="row">

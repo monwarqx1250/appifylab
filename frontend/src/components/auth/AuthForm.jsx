@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 
 const VARIANT_CLASSES = {
   registration: {
@@ -21,6 +21,20 @@ const VARIANT_CLASSES = {
   },
 };
 
+function gatherFormValues(formEl) {
+  const formData = new FormData(formEl);
+  const values = {};
+  for (const [key, value] of formData.entries()) {
+    if (typeof value === 'string') values[key] = value;
+  }
+  formEl.querySelectorAll('input[type="checkbox"]').forEach((cb) => {
+    if (cb.name) {
+      values[cb.name] = cb.checked;
+    }
+  });
+  return values;
+}
+
 /**
  * @param {object} props
  * @param {'registration' | 'login'} props.variant
@@ -28,6 +42,7 @@ const VARIANT_CLASSES = {
  * @param {string} props.submitLabel
  * @param {React.ReactNode} [props.beforeSubmit]
  * @param {(values: Record<string, string>) => Promise<{ error?: string } | void>} props.onSubmit
+ * @param {(values: Record<string, string>) => boolean} [props.validate]
  */
 export default function AuthForm({
   variant,
@@ -35,25 +50,52 @@ export default function AuthForm({
   submitLabel,
   beforeSubmit = null,
   onSubmit,
+  validate,
 }) {
   const c = VARIANT_CLASSES[variant] || VARIANT_CLASSES.registration;
+  const formRef = useRef(null);
+  const [values, setValues] = useState({});
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const passwordsMismatch =
+    values.password && values.confirm_password && values.password !== values.confirm_password;
+
+  const isValid = useMemo(() => {
+    if (!validate) return true;
+    return validate(values);
+  }, [values, validate]);
+
+  useEffect(() => {
+    const form = formRef.current;
+    if (!form) return;
+
+    const handleInput = () => {
+      setValues(gatherFormValues(form));
+    };
+
+    form.addEventListener('input', handleInput);
+    form.addEventListener('change', handleInput);
+    return () => {
+      form.removeEventListener('input', handleInput);
+      form.removeEventListener('change', handleInput);
+    };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    const formData = new FormData(e.currentTarget);
-    /** @type {Record<string, string>} */
-    const values = {};
-    for (const [key, value] of formData.entries()) {
-      if (typeof value === 'string') values[key] = value;
+    const formValues = gatherFormValues(e.currentTarget);
+    setValues(formValues);
+
+    if (validate && !validate(formValues)) {
+      return;
     }
 
     setIsSubmitting(true);
     try {
-      const result = await onSubmit(values);
+      const result = await onSubmit(formValues);
       if (result && typeof result === 'object' && result.error) {
         setError(result.error);
       }
@@ -65,25 +107,36 @@ export default function AuthForm({
   };
 
   return (
-    <form className={c.form} onSubmit={handleSubmit} noValidate>
+    <form ref={formRef} className={c.form} onSubmit={handleSubmit} noValidate>
       {fields.map((f) => (
-        <div className="row" key={f.name}>
-          <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
-            <div className={c.inputWrap}>
-              <label className={`${c.label}`} htmlFor={`auth-field-${f.name}`}>
-                {f.label}
-              </label>
-              <input
-                id={`auth-field-${f.name}`}
-                type={f.type}
-                name={f.name}
-                className={c.input}
-                autoComplete={f.autoComplete}
-                required
-              />
+        <React.Fragment key={f.name}>
+          <div className="row">
+            <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
+              <div className={c.inputWrap}>
+                <label className={`${c.label}`} htmlFor={`auth-field-${f.name}`}>
+                  {f.label}
+                </label>
+                <input
+                  id={`auth-field-${f.name}`}
+                  type={f.type}
+                  name={f.name}
+                  className={c.input}
+                  autoComplete={f.autoComplete}
+                  required
+                />
+              </div>
             </div>
           </div>
-        </div>
+          {f.name === 'confirm_password' && passwordsMismatch && (
+            <div className="row">
+              <div className="col-12">
+                <p style={{ color: '#dc3545', fontSize: '0.82rem', marginTop: '-10px', marginBottom: '14px' }}>
+                  Passwords didn't match
+                </p>
+              </div>
+            </div>
+          )}
+        </React.Fragment>
       ))}
 
       {beforeSubmit}
@@ -101,7 +154,12 @@ export default function AuthForm({
       <div className="row">
         <div className="col-lg-12 col-md-12 col-xl-12 col-sm-12">
           <div className={c.submitBtnWrap}>
-            <button type="submit" className={c.submitBtn} disabled={isSubmitting}>
+            <button
+              type="submit"
+              className={c.submitBtn}
+              disabled={isSubmitting || !isValid}
+              style={{ opacity: isSubmitting || !isValid ? 0.5 : 1, cursor: isSubmitting || !isValid ? 'not-allowed' : 'pointer' }}
+            >
               {isSubmitting ? 'Please wait…' : submitLabel}
             </button>
           </div>
