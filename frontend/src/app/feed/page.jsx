@@ -1,7 +1,8 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StoryCarousel from '@/components/feed/StoryCarousel';
 import StoryCarouselMobile from '@/components/feed/StoryCarouselMobile';
@@ -16,10 +17,31 @@ import ThemeSwitcher from '@/components/layout/ThemeSwitcher';
 import DesktopNavbar from '@/components/layout/DesktopNavbar';
 import MobileHeader from '@/components/layout/MobileHeader';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import { useAuth } from '@/context/AuthContext';
 
 
 export default function FeedPage() {
+	const router = useRouter();
+	const { user, isAuthenticated, isLoading } = useAuth();
 	const [isDarkMode, setIsDarkMode] = useState(false);
+
+	useEffect(() => {
+		if (!isLoading && !isAuthenticated) {
+			router.push('/login');
+		}
+	}, [isLoading, isAuthenticated, router]);
+
+	if (isLoading) {
+		return (
+			<div className="_layout_main_wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+				<p>Loading...</p>
+			</div>
+		);
+	}
+
+	if (!isAuthenticated) {
+		return null;
+	}
 
 	const samplePost = {
 		author: {
@@ -54,9 +76,13 @@ export default function FeedPage() {
 		],
 	};
 
-	const currentUser = {
+	const currentUser = user ? {
+		id: user.id,
+		firstName: user.firstName,
+		lastName: user.lastName,
+		email: user.email,
 		avatar: 'assets/images/comment_img.png',
-	};
+	} : null;
 
 	const handleReact = () => console.log('React clicked');
 	const handleComment = () => console.log('Comment clicked');

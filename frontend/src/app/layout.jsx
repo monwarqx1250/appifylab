@@ -1,3 +1,5 @@
+import { AuthProvider } from '@/context/AuthContext';
+
 export const metadata = {
   title: "Buddy Script Login",
   description: "Login to your Buddy Script account",
@@ -17,7 +19,9 @@ export default function RootLayout({ children }) {
         <link rel="stylesheet" href="/assets/css/responsive.css" />
       </head>
       <body>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
         <script src="/assets/js/bootstrap.bundle.min.js" async></script>
       </body>
     </html>

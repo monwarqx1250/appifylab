@@ -1,11 +1,12 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthForm from '@/components/auth/AuthForm';
 import { persistAuthSession, postAuth } from '@/lib/auth';
 import { ToastProvider, useToast } from '@/components/ui/Toast';
+import { useAuth } from '@/context/AuthContext';
 
 const LOGIN_FIELDS = [
   { name: 'email', type: 'email', label: 'Email', autoComplete: 'email' },
@@ -23,24 +24,38 @@ export default function LoginPage() {
 function LoginContent() {
   const router = useRouter();
   const { showToast } = useToast();
+  const { login, isAuthenticated, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.push('/feed');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  if (isLoading) {
+    return (
+      <section className="_social_login_wrapper _layout_main_wrapper">
+        <p>Loading...</p>
+      </section>
+    );
+  }
+
+  if (isAuthenticated) {
+    return null;
+  }
 
   const handleLogin = async (values) => {
     const { email, password } = values;
 
-    const { ok, status, data } = await postAuth('/auth/login', { email, password });
+    const result = await login(email, password);
 
-    if (ok && status === 200 && data) {
-      persistAuthSession(data);
+    if (result.success) {
       showToast('Login successful!', 'success');
       router.push('/feed');
       return;
     }
 
-    const message =
-      data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
-        ? data.error
-        : 'Login failed. Please check your details and try again.';
-    showToast(message, 'error');
+    showToast(result.error || 'Login failed. Please check your details and try again.', 'error');
   };
 
   const beforeSubmit = (

@@ -1,4 +1,31 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
+
 export default function Home() {
+    const router = useRouter();
+    const { isAuthenticated, isLoading } = useAuth();
+
+    useEffect(() => {
+        if (!isLoading && isAuthenticated) {
+            router.push('/feed');
+        }
+    }, [isLoading, isAuthenticated, router]);
+
+    if (isLoading) {
+        return (
+            <div style={styles.container}>
+                <p>Loading...</p>
+            </div>
+        );
+    }
+
+    if (isAuthenticated) {
+        return null;
+    }
+
     return (
         <div style={styles.container}>
             <h1 style={styles.title}>Buddy Script</h1>

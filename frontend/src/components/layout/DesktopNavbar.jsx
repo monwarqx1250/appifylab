@@ -1,9 +1,18 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 
 export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 	const [isNotifyOpen, setIsNotifyOpen] = useState(false);
 	const [isProfileOpen, setIsProfileOpen] = useState(false);
+	const router = useRouter();
+	const { user, logout } = useAuth();
+
+	const handleLogout = () => {
+		logout();
+		router.push('/login');
+	};
 	return (
 		<>
 			{/* Desktop Menu Start */}
@@ -484,7 +493,7 @@ export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 										</a>
 									</li>
 									<li className="_nav_dropdown_list_item">
-										<a href="#0" className="_nav_dropdown_link">
+										<button type="button" className="_nav_dropdown_link" onClick={handleLogout} style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left', cursor: 'pointer' }}>
 											<div className="_nav_drop_info">
 												<span>
 													<svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" fill="none" viewBox="0 0 19 19">
@@ -493,12 +502,7 @@ export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 												</span>
 												Log Out
 											</div>
-											<button type="submit" className="_nav_drop_btn_link">
-												<svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">
-													<path fill="#112032" d="M5 5l.354.354L5.707 5l-.353-.354L5 5zM1.354 9.354l4-4-.708-.708-4 4 .708.708zm4-4.708l-4-4-.708.708 4 4 .708-.708z" opacity=".5" />
-												</svg>
-											</button>
-										</a>
+										</button>
 									</li>
 								</ul>
 							</div>
