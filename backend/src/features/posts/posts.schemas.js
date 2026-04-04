@@ -105,6 +105,18 @@ const getPostsSchema = {
               comments: { type: 'integer' },
               likes: { type: 'integer' }
             }
+          },
+          isLiked: { type: 'boolean' },
+          likesCount: { type: 'integer' },
+          likedBy: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                name: { type: 'string' }
+              }
+            }
           }
         }
       }
@@ -124,7 +136,53 @@ const getPostsSchema = {
   }
 };
 
+const getPostLikersSchema = {
+  tags: ['posts'],
+  summary: 'Get users who liked a post',
+  description: 'Returns paginated list of users who liked a post',
+  params: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', description: 'Post ID' }
+    }
+  },
+  querystring: {
+    type: 'object',
+    properties: {
+      page: { type: 'integer', minimum: 1, default: 1 },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        likers: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              firstName: { type: 'string' },
+              lastName: { type: 'string' }
+            }
+          }
+        },
+        totalLikes: { type: 'integer' },
+        hasMore: { type: 'boolean' }
+      }
+    },
+    404: {
+      type: 'object',
+      properties: {
+        error: { type: 'string' }
+      }
+    }
+  }
+};
+
 module.exports = {
   createPostSchema,
-  getPostsSchema
+  getPostsSchema,
+  getPostLikersSchema
 };

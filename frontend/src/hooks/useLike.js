@@ -6,13 +6,11 @@ export function useLike() {
 	const [error, setError] = useState(null);
 
 	const toggleLike = useCallback(async (entityId, entityType) => {
-		console.log('toggleLike called:', entityId, entityType);
 		setLoading(true);
 		setError(null);
 
 		try {
 			const result = await likesApi.toggle(entityId, entityType);
-			console.log('likesApi.toggle result:', result);
 			
 			if (!result.ok) {
 				throw new Error(String(result.data?.message || 'Failed to toggle like'));

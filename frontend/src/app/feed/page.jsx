@@ -67,6 +67,7 @@ export default function FeedPage() {
 		reactions: [],
 		likesCount: post.likesCount || post._count?.likes || 0,
 		isLiked: post.isLiked || false,
+		likedBy: post.likedBy || [],
 		commentCount: post._count?.comments || 0,
 		shareCount: 0,
 		previousCommentsCount: 0,
@@ -104,23 +105,33 @@ export default function FeedPage() {
 	};
 
 	const handleReact = useCallback(async (postId) => {
-		console.log('handleReact called with postId:', postId);
 		const result = await likePost(postId);
-		console.log('likePost result:', result);
 		if (!result) return;
 		
 		setPosts(prev => prev.map(post => {
 			if (post.id === postId) {
 				const isLiked = result?.liked ?? !post.isLiked;
+				const currentUserName = user ? `${user.firstName} ${user.lastName}`.trim() : 'You';
+				
+				let newLikedBy;
+				if (isLiked) {
+					// Add current user to likedBy
+					newLikedBy = [{ id: user?.id, name: currentUserName }, ...(post.likedBy || [])].slice(0, 5);
+				} else {
+					// Remove current user from likedBy
+					newLikedBy = (post.likedBy || []).filter(l => l.id !== user?.id);
+				}
+				
 				return {
 					...post,
 					isLiked,
 					likesCount: isLiked ? (post.likesCount || 0) + 1 : Math.max(0, (post.likesCount || 1) - 1),
+					likedBy: newLikedBy,
 				};
 			}
 			return post;
 		}));
-	}, [likePost]);
+	}, [likePost, user]);
 
 	const handleComment = useCallback((postId) => {
 		const post = posts.find(p => p.id === postId);

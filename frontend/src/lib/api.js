@@ -112,4 +112,7 @@ export const commentsApi = {
 export const likesApi = {
   toggle: (entityId, entityType) => 
     api.post('/likes/toggle', { entityId, entityType }),
+  
+  getPostLikers: (postId, page = 1, limit = 20) => 
+    api.get(`/posts/${postId}/likers?page=${page}&limit=${limit}`),
 };

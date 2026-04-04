@@ -1,4 +1,4 @@
-const { createPostSchema, getPostsSchema } = require('./posts.schemas');
+const { createPostSchema, getPostsSchema, getPostLikersSchema } = require('./posts.schemas');
 const PostsService = require('./posts.service');
 
 module.exports = async function (fastify, opts) {
@@ -128,6 +128,25 @@ module.exports = async function (fastify, opts) {
         fastify.log.error(err);
         reply.code(500).send({ error: 'Internal Server Error' });
       }
+    }
+  });
+
+  // Get post likers with pagination
+  fastify.get('/posts/:id/likers', { schema: getPostLikersSchema }, async (request, reply) => {
+    try {
+      const { id: postId } = request.params;
+      const { page, limit } = request.query;
+      
+      const result = await postsService.getPostLikers(postId, page, limit);
+      
+      if (!result) {
+        return reply.code(404).send({ error: 'Post not found' });
+      }
+      
+      reply.code(200).send(result);
+    } catch (err) {
+      fastify.log.error(err);
+      reply.code(500).send({ error: 'Internal Server Error' });
     }
   });
 };

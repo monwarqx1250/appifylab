@@ -4,14 +4,14 @@ class LikesService {
   }
 
   async toggleLike(userId, entityId, entityType) {
-    const existingLike = await this.prisma.like.findUnique({
-      where: {
-        userId_entityId_entityType: {
-          userId,
-          entityId,
-          entityType
-        }
-      }
+    const isPost = entityType === 'post';
+    
+    const whereClause = isPost 
+      ? { userId, postId: entityId }
+      : { userId, commentId: entityId };
+
+    const existingLike = await this.prisma.like.findFirst({
+      where: whereClause
     });
 
     if (existingLike) {
@@ -22,12 +22,12 @@ class LikesService {
       return { action: 'unliked', liked: false };
     } else {
       // Like
+      const likeData = isPost 
+        ? { userId, postId: entityId }
+        : { userId, commentId: entityId };
+        
       await this.prisma.like.create({
-        data: {
-          userId,
-          entityId,
-          entityType
-        }
+        data: likeData
       });
       return { action: 'liked', liked: true };
     }

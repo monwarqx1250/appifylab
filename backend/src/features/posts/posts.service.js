@@ -68,16 +68,29 @@ class PostsService {
           select: { comments: true, likes: true }
         },
         likes: {
-          where: { userId }
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true } }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5
         }
       }
     });
 
-    return posts.map(post => ({
-      ...this.formatPostAttachments(post),
-      isLiked: post.likes.length > 0,
-      likesCount: post._count.likes,
-    }));
+    return posts.map(post => {
+      // Check if current user liked by looking at likes array
+      const currentUserLiked = post.likes.some(like => like.userId === userId);
+      
+      return {
+        ...this.formatPostAttachments(post),
+        isLiked: currentUserLiked,
+        likesCount: post._count.likes,
+        likedBy: post.likes.map(like => ({
+          id: like.user.id,
+          name: `${like.user.firstName} ${like.user.lastName}`.trim(),
+        }))
+      };
+    });
   }
 
   async getAllPosts() {
@@ -91,16 +104,30 @@ class PostsService {
         _count: {
           select: { comments: true, likes: true }
         },
-        likes: true
+        likes: {
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true } }
+          },
+          orderBy: { createdAt: 'desc' },
+          take: 5
+        }
       }
     });
 
     const userId = this.userId;
-    return posts.map(post => ({
-      ...this.formatPostAttachments(post),
-      isLiked: userId ? post.likes.some(like => like.userId === userId) : false,
-      likesCount: post._count.likes,
-    }));
+    return posts.map(post => {
+      const currentUserLiked = userId ? post.likes.some(like => like.userId === userId) : false;
+      
+      return {
+        ...this.formatPostAttachments(post),
+        isLiked: currentUserLiked,
+        likesCount: post._count.likes,
+        likedBy: post.likes.map(like => ({
+          id: like.user.id,
+          name: `${like.user.firstName} ${like.user.lastName}`.trim(),
+        }))
+      };
+    });
   }
 
   async getPostById(postId) {
@@ -116,6 +143,48 @@ class PostsService {
 
     if (!post) return null;
     return this.formatPostAttachments(post);
+  }
+
+  async getPostLikers(postId, page = 1, limit = 20) {
+    const skip = (page - 1) * limit;
+    
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        _count: {
+          select: { likes: true }
+        }
+      }
+    });
+
+    if (!post) {
+      return null;
+    }
+
+    const likers = await this.prisma.like.findMany({
+      where: { postId },
+      include: {
+        user: {
+          select: { id: true, firstName: true, lastName: true }
+        }
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: limit
+    });
+
+    const totalLikes = post._count.likes;
+    const hasMore = skip + likers.length < totalLikes;
+
+    return {
+      likers: likers.map(like => ({
+        id: like.user.id,
+        firstName: like.user.firstName,
+        lastName: like.user.lastName
+      })),
+      totalLikes,
+      hasMore
+    };
   }
 
   async updatePost(postId, userId, data) {
