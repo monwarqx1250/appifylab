@@ -19,17 +19,17 @@ class LikesService {
       await this.prisma.like.delete({
         where: { id: existingLike.id }
       });
-      return { action: 'unliked', entityId, entityType };
+      return { action: 'unliked', liked: false };
     } else {
       // Like
-      const newLike = await this.prisma.like.create({
+      await this.prisma.like.create({
         data: {
           userId,
           entityId,
           entityType
         }
       });
-      return { action: 'liked', like: newLike };
+      return { action: 'liked', liked: true };
     }
   }
 }

@@ -2,7 +2,7 @@ const { createPostSchema, getPostsSchema } = require('./posts.schemas');
 const PostsService = require('./posts.service');
 
 module.exports = async function (fastify, opts) {
-  const postsService = new PostsService(fastify.prisma);
+  const postsService = new PostsService(fastify.prisma, fastify.user?.id);
 
   fastify.addHook('onRequest', fastify.authenticate);
 
