@@ -16,10 +16,24 @@ module.exports = async function (fastify, opts) {
     }
   });
 
+  // Get initial comments (paginated - for embedding in posts)
   fastify.get('/posts/:postId/comments', { schema: getCommentsSchema }, async (request, reply) => {
     try {
       const { postId } = request.params;
-      const comments = await commentsService.getCommentsByPostId(postId);
+      const { page = 1, limit = 3 } = request.query;
+      const result = await commentsService.getCommentsByPostId(postId, page, limit, false);
+      reply.code(200).send(result);
+    } catch (err) {
+      fastify.log.error(err);
+      reply.code(500).send({ error: 'Internal Server Error' });
+    }
+  });
+
+  // Get all comments for modal
+  fastify.get('/posts/:postId/all-comments', async (request, reply) => {
+    try {
+      const { postId } = request.params;
+      const comments = await commentsService.getAllComments(postId);
       reply.code(200).send(comments);
     } catch (err) {
       fastify.log.error(err);

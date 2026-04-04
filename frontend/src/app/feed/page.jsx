@@ -68,10 +68,9 @@ export default function FeedPage() {
 		likesCount: post.likesCount || post._count?.likes || 0,
 		isLiked: post.isLiked || false,
 		likedBy: post.likedBy || [],
-		commentCount: post._count?.comments || 0,
+		commentCount: post.commentCount ?? post._count?.comments ?? 0,
 		shareCount: 0,
-		previousCommentsCount: 0,
-		comments: [],
+		comments: post.comments || [],
 	});
 
 	const formatTimeAgo = (dateString) => {

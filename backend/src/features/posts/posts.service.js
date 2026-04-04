@@ -10,6 +10,19 @@ class PostsService {
     return `${UPLOAD_BASE_URL}/${filename}`;
   }
 
+  formatTimeAgo(date) {
+    const now = new Date();
+    const diffMs = now - new Date(date);
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m`;
+    if (diffHours < 24) return `${diffHours}h`;
+    return `${diffDays}d`;
+  }
+
   async createPost(userId, data) {
     const { content, visibility, files } = data;
     
@@ -73,6 +86,13 @@ class PostsService {
           },
           orderBy: { createdAt: 'desc' },
           take: 5
+        },
+        comments: {
+          take: 2,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            author: { select: { id: true, firstName: true, lastName: true } }
+          }
         }
       }
     });
@@ -88,6 +108,16 @@ class PostsService {
         likedBy: post.likes.map(like => ({
           id: like.user.id,
           name: `${like.user.firstName} ${like.user.lastName}`.trim(),
+        })),
+        commentCount: post._count.comments,
+        comments: post.comments.map(comment => ({
+          id: comment.id,
+          author: {
+            name: `${comment.author.firstName} ${comment.author.lastName}`.trim(),
+          },
+          content: comment.content,
+          timestamp: this.formatTimeAgo(comment.createdAt),
+          likes: 0,
         }))
       };
     });
@@ -110,6 +140,13 @@ class PostsService {
           },
           orderBy: { createdAt: 'desc' },
           take: 5
+        },
+        comments: {
+          take: 2,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            author: { select: { id: true, firstName: true, lastName: true } }
+          }
         }
       }
     });
@@ -125,6 +162,16 @@ class PostsService {
         likedBy: post.likes.map(like => ({
           id: like.user.id,
           name: `${like.user.firstName} ${like.user.lastName}`.trim(),
+        })),
+        commentCount: post._count.comments,
+        comments: post.comments.map(comment => ({
+          id: comment.id,
+          author: {
+            name: `${comment.author.firstName} ${comment.author.lastName}`.trim(),
+          },
+          content: comment.content,
+          timestamp: this.formatTimeAgo(comment.createdAt),
+          likes: 0,
         }))
       };
     });

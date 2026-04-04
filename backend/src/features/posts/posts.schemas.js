@@ -117,6 +117,25 @@ const getPostsSchema = {
                 name: { type: 'string' }
               }
             }
+          },
+          commentCount: { type: 'integer' },
+          comments: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string' },
+                author: {
+                  type: 'object',
+                  properties: {
+                    name: { type: 'string' }
+                  }
+                },
+                content: { type: 'string' },
+                timestamp: { type: 'string' },
+                likes: { type: 'integer' }
+              }
+            }
           }
         }
       }

@@ -7,6 +7,7 @@ import PostReactionSummary from './PostReactionSummary';
 import PostActionBar from './PostActionBar';
 import CommentThread from './CommentThread';
 import LikesModal from '@/components/ui/LikesModal';
+import CommentsModal from '@/components/ui/CommentsModal';
 
 export default function PostCard({ 
 	post,
@@ -22,6 +23,11 @@ export default function PostCard({
 	onShareComment
 }) {
 	const [showLikesModal, setShowLikesModal] = useState(false);
+	const [showCommentsModal, setShowCommentsModal] = useState(false);
+
+	// Show latest 2 comments inline
+	const latestComments = post?.comments?.slice(0, 2) || [];
+	const totalComments = post?.commentCount || 0;
 
 	return (
 		<>
@@ -49,19 +55,26 @@ export default function PostCard({
 				/>
 				<PostActionBar 
 					onReact={onReact}
-					onComment={onComment}
+					onComment={(postId) => {
+						if (totalComments > 2) {
+							setShowCommentsModal(true);
+						} else {
+							onComment?.(postId);
+						}
+					}}
 					onShare={onShare}
 					isLiked={post?.isLiked || false}
 					postId={post?.id}
 				/>
+				{/* Comments section */}
 				<CommentThread 
-					comments={post?.comments || []}
-					previousCommentsCount={post?.previousCommentsCount || 0}
+					comments={latestComments}
+					previousCommentsCount={totalComments > 2 ? totalComments - 2 : 0}
 					currentUser={currentUser}
-					onLoadPrevious={onLoadPreviousComments}
-					onAddComment={onAddComment}
-					onLikeComment={onLikeComment}
-					onReplyComment={onReplyComment}
+					onLoadPrevious={() => setShowCommentsModal(true)}
+					onAddComment={(content) => onAddComment?.(content, post?.id)}
+					onLikeComment={(commentId) => onLikeComment?.(commentId, post?.id)}
+					onReplyComment={(commentId, content) => onReplyComment?.(content, commentId, post?.id)}
 					onShareComment={onShareComment}
 				/>
 			</div>
@@ -69,6 +82,13 @@ export default function PostCard({
 				isOpen={showLikesModal} 
 				onClose={() => setShowLikesModal(false)} 
 				postId={post?.id}
+			/>
+			<CommentsModal 
+				isOpen={showCommentsModal} 
+				onClose={() => setShowCommentsModal(false)} 
+				postId={post?.id}
+				currentUser={currentUser}
+				onAddComment={() => onAddComment?.(null, post?.id)}
 			/>
 		</>
 	);

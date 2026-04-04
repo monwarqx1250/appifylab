@@ -37,7 +37,7 @@ export default function PostActionBar({ onReact, onComment, onShare, isLiked = f
 			<button 
 				type="button"
 				className="_feed_inner_timeline_reaction_comment _feed_reaction"
-				onClick={(e) => { e.preventDefault(); e.stopPropagation(); onComment?.(); }}
+				onClick={(e) => { e.preventDefault(); e.stopPropagation(); onComment?.(postId); }}
 			>
 				<span className="_feed_inner_timeline_reaction_link"> 
 					<span>
@@ -52,7 +52,7 @@ export default function PostActionBar({ onReact, onComment, onShare, isLiked = f
 			<button 
 				type="button"
 				className="_feed_inner_timeline_reaction_share _feed_reaction"
-				onClick={(e) => { e.preventDefault(); e.stopPropagation(); onShare?.(); }}
+				onClick={(e) => { e.preventDefault(); e.stopPropagation(); onShare?.(postId); }}
 			>
 				<span className="_feed_inner_timeline_reaction_link"> 
 					<span>

@@ -2,11 +2,12 @@
 
 import React, { useRef } from 'react';
 
-export default function CommentComposer({ currentUser, onSubmit, placeholder = "Write a comment", textareaId }) {
+export default function CommentComposer({ currentUser, onSubmit, placeholder = "Write a comment", textareaId, submitting = false }) {
 	const textareaRef = useRef(null);
 
 	const handleSubmit = (e) => {
 		e.preventDefault();
+		if (submitting) return;
 		const textarea = textareaRef.current;
 		const content = textarea.value.trim();
 		if (content) {
@@ -16,6 +17,7 @@ export default function CommentComposer({ currentUser, onSubmit, placeholder = "
 	};
 
 	const handleKeyDown = (e) => {
+		if (submitting) return;
 		if (e.key === 'Enter' || e.keyCode === 13) {
 			if (!e.shiftKey) {
 				e.preventDefault();
@@ -48,14 +50,19 @@ export default function CommentComposer({ currentUser, onSubmit, placeholder = "
 							placeholder={placeholder} 
 							id={textareaId}
 							onKeyDown={handleKeyDown}
+							disabled={submitting}
 						></textarea>
 					</div>
 				</div>
 				<div className="_feed_inner_comment_box_icon">
-					<button type="submit" className="_feed_inner_comment_box_icon_btn">
-						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-							<path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-						</svg>
+					<button type="submit" className="_feed_inner_comment_box_icon_btn" disabled={submitting}>
+						{submitting ? (
+							<span style={{ fontSize: '12px' }}>...</span>
+						) : (
+							<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+								<path d="M22 2L11 13M22 2L15 22L11 13M22 2L2 9L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+							</svg>
+						)}
 					</button>
 					<button type="button" className="_feed_inner_comment_box_icon_btn">
 						<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16">
