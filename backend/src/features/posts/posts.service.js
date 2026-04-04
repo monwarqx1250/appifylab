@@ -1,28 +1,54 @@
+const UPLOAD_BASE_URL = process.env.UPLOAD_BASE_URL || '/uploads';
+
 class PostsService {
   constructor(prisma) {
     this.prisma = prisma;
   }
 
+  formatAttachmentUrl(filename) {
+    return `${UPLOAD_BASE_URL}/${filename}`;
+  }
+
   async createPost(userId, data) {
-    return await this.prisma.post.create({
+    const { content, visibility, files } = data;
+    
+    const post = await this.prisma.post.create({
       data: {
-        content: data.content,
-        visibility: data.visibility || 'public',
-        authorId: userId
+        content,
+        visibility: visibility || 'public',
+        authorId: userId,
+        attachments: files?.length > 0 ? {
+          create: files.map(file => ({
+            fileUrl: file.filename,
+            fileType: file.mimetype
+          }))
+        } : undefined
       },
       include: {
         author: {
           select: { id: true, firstName: true, lastName: true }
-        }
+        },
+        attachments: true
       }
     });
+
+    return this.formatPostAttachments(post);
+  }
+
+  formatPostAttachments(post) {
+    return {
+      ...post,
+      attachments: (post.attachments || []).map(att => ({
+        ...att,
+        fileUrl: this.formatAttachmentUrl(att.fileUrl)
+      }))
+    };
   }
 
   async getFeedPosts(userId, page, limit) {
     const skip = (page - 1) * limit;
 
-    // Fetch Public Posts OR Private Posts authored by the User
-    return await this.prisma.post.findMany({
+    const posts = await this.prisma.post.findMany({
       where: {
         OR: [
           { visibility: 'public' },
@@ -36,11 +62,29 @@ class PostsService {
         author: {
           select: { id: true, firstName: true, lastName: true }
         },
+        attachments: true,
         _count: {
           select: { comments: true, likes: true }
         }
       }
     });
+
+    return posts.map(post => this.formatPostAttachments(post));
+  }
+
+  async getPostById(postId) {
+    const post = await this.prisma.post.findUnique({
+      where: { id: postId },
+      include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true }
+        },
+        attachments: true
+      }
+    });
+
+    if (!post) return null;
+    return this.formatPostAttachments(post);
   }
 }
 

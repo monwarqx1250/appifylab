@@ -6,7 +6,51 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook('onRequest', fastify.authenticate);
 
-  fastify.post('/posts', async (request, reply) => {
+  fastify.post('/posts', {
+    schema: {
+      tags: ['posts'],
+      summary: 'Create a new post',
+      description: 'Creates a new post with optional file attachments. Requires JWT authentication.',
+      consumes: ['multipart/form-data'],
+      response: {
+        201: {
+          description: 'Post created successfully',
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  content: { type: 'string' },
+                  visibility: { type: 'string' },
+                  author: {
+                    type: 'object',
+                    properties: {
+                      id: { type: 'string' },
+                      firstName: { type: 'string' },
+                      lastName: { type: 'string' }
+                    }
+                  },
+                  attachments: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        fileUrl: { type: 'string' },
+                        fileType: { type: 'string' }
+                      }
+                    }
+                  },
+                  createdAt: { type: 'string', format: 'date-time' }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }, async (request, reply) => {
     try {
       const body = await fastify.normalizeMultipart(request)
       const post = await postsService.createPost(request.user.id, body)
