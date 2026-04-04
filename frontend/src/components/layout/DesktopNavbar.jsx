@@ -3,6 +3,15 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
+const notificationsData = [
+	{ id: 1, user: 'Steve Jobs', action: 'posted a link in your timeline.', time: '42 minutes ago', image: 'assets/images/friend-req.png' },
+	{ id: 2, user: 'Freelancer usa', action: 'changed the group name to Freelancer USA', time: '42 minutes ago', image: 'assets/images/profile-1.png' },
+	{ id: 3, user: 'Steve Jobs', action: 'posted a link in your timeline.', time: '42 minutes ago', image: 'assets/images/friend-req.png' },
+	{ id: 4, user: 'Freelancer usa', action: 'changed the group name to Freelancer USA', time: '42 minutes ago', image: 'assets/images/profile-1.png' },
+	{ id: 5, user: 'Steve Jobs', action: 'posted a link in your timeline.', time: '1 hour ago', image: 'assets/images/friend-req.png' },
+	{ id: 6, user: 'Freelancer usa', action: 'changed the group name to Freelancer USA', time: '1 hour ago', image: 'assets/images/profile-1.png' },
+];
+
 export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 	const [isNotifyOpen, setIsNotifyOpen] = useState(false);
 	const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -93,330 +102,22 @@ export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 												</button>
 											</div>
 											<div className="_notifications_all">
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
+												{notificationsData.map((notification) => (
+													<div key={notification.id} className="_notification_box">
+														<div className="_notification_image">
+															<img src={notification.image} alt="Image" className="_notify_img" />
+														</div>
+														<div className="_notification_txt">
+															<p className="_notification_para">
+																<span className="_notify_txt_link">{notification.user}</span>
+																{notification.action}
+															</p>
+															<div className="_nitification_time">
+																<span>{notification.time}</span>
+															</div>
 														</div>
 													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/friend-req.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															<span className="_notify_txt_link">
-																Steve Jobs
-															</span>
-															posted a link in your timeline.
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
-												<div className="_notification_box">
-													<div className="_notification_image">
-														<img src="assets/images/profile-1.png" alt="Image" className="_notify_img" />
-													</div>
-													<div className="_notification_txt">
-														<p className="_notification_para">
-															An admin changed the name of the group
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-															to
-															<span className="_notify_txt_link">
-																Freelacer usa
-															</span>
-														</p>
-														<div className="_nitification_time">
-															<span>42 miniutes ago</span>
-														</div>
-													</div>
-												</div>
+												))}
 											</div>
 										</div>
 									</div>
@@ -435,7 +136,7 @@ export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 								<img src="assets/images/profile.png" alt="Image" className="_nav_profile_img" />
 							</div>
 							<div className="_header_nav_dropdown">
-								<p className="_header_nav_para">Dylan Field</p>
+								<p className="_header_nav_para">{user?.firstName} {user?.lastName}</p>
 								<button id="_profile_drop_show_btn" className="_header_nav_dropdown_btn _dropdown_toggle" type="button" onClick={() => setIsProfileOpen(!isProfileOpen)}>
 									<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6" fill="none" viewBox="0 0 10 6">
 										<path fill="#112032" d="M5 5l.354.354L5 5.707l-.354-.353L5 5zm4.354-3.646l-4 4-.708-.708 4-4 .708.708zm-4.708 4l-4-4 .708-.708 4 4-.708.708z" />
@@ -449,7 +150,7 @@ export default function DesktopNavbar({ isDarkMode, setIsDarkMode }) {
 										<img src="assets/images/profile.png" alt="Image" className="_nav_drop_img" />
 									</div>
 									<div className="_nav_profile_dropdown_info_txt">
-										<h4 className="_nav_dropdown_title">Dylan Field</h4>
+										<h4 className="_nav_dropdown_title">{user?.firstName} {user?.lastName}</h4>
 										<a href="profile.html" className="_nav_drop_profile">
 											View Profile
 										</a>

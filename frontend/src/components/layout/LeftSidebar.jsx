@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 
-export default function LeftSidebar() {
+export default function LeftSidebar({ user }) {
 	return (
 		<>
 			{/*  Left Sidebar  */}

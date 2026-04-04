@@ -153,14 +153,14 @@ export default function FeedPage() {
 			<div className={`_layout _layout_main_wrapper ${isDarkMode ? '_dark_wrapper' : ''}`}>
 				<ThemeSwitcher isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
 				<div className="_main_layout">
-					<DesktopNavbar />
-					<MobileHeader />
-					<MobileBottomNav />
+					<DesktopNavbar user={user} />
+					<MobileHeader user={user} />
+					<MobileBottomNav user={user} />
 					{/*  Main Layout Structure  */}
 					<div className="container _custom_container">
 						<div className="_layout_inner_wrap">
 							<div className="row">
-								<LeftSidebar />
+								<LeftSidebar user={user} />
 								{/*  Layout Middle  */}
 								<div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
 									<div className="_layout_middle_wrap">
@@ -197,8 +197,8 @@ export default function FeedPage() {
 									</div>
 								</div>
 								{/*  Layout Middle  */}
-								<RightSidebar />
-							</div>
+							<RightSidebar user={user} />
+						</div>
 						</div>
 					</div>
 					{/*  Main Layout Structure  */}
