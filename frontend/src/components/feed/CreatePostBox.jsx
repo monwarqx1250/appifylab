@@ -159,95 +159,95 @@ export default function CreatePostBox({ onPostCreated }) {
 						</button>
 					</div>
 				</div>
-				<div className="_feed_inner_text_area_btn" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-					<div style={{ position: 'relative' }} ref={visibilityRef}>
-						<button 
-							type="button" 
-							onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
-							style={{
-								background: 'none',
-								border: 'none',
-								cursor: 'pointer',
-								display: 'flex',
-								alignItems: 'center',
-								gap: '6px',
-								padding: '8px 12px',
-								fontSize: '14px',
-								color: '#666'
-							}}
-						>
-							{visibility === 'public' ? (
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-									<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
-									<path stroke="currentColor" strokeWidth="2" d="M12 16v-4M12 8h.01"/>
-								</svg>
-							) : (
-								<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-									<path stroke="currentColor" strokeWidth="2" d="M17 11h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2M12 12l4 4"/>
-									<rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
-								</svg>
+					<div className="_feed_inner_text_area_btn" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+						<div style={{ position: 'relative' }} ref={visibilityRef}>
+							<button 
+								type="button" 
+								onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
+								style={{
+									background: 'none',
+									border: 'none',
+									cursor: 'pointer',
+									display: 'flex',
+									alignItems: 'center',
+									gap: '6px',
+									padding: '8px 12px',
+									fontSize: '14px',
+									color: '#666'
+								}}
+							>
+								{visibility === 'public' ? (
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+										<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+										<path stroke="currentColor" strokeWidth="2" d="M12 16v-4M12 8h.01"/>
+									</svg>
+								) : (
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+										<path stroke="currentColor" strokeWidth="2" d="M17 11h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2M12 12l4 4"/>
+										<rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
+									</svg>
+								)}
+								{visibility === 'public' ? 'Public' : 'Private'}
+							</button>
+							{showVisibilityMenu && (
+								<div style={{
+									position: 'absolute',
+									bottom: '100%',
+									left: 0,
+									marginBottom: '4px',
+									background: 'white',
+									border: '1px solid #ddd',
+									borderRadius: '8px',
+									boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+									zIndex: 100,
+									overflow: 'hidden'
+								}}>
+									<button
+										type="button"
+										onClick={() => toggleVisibility('public')}
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											width: '100%',
+											padding: '10px 16px',
+											border: 'none',
+											background: visibility === 'public' ? '#f0f0f0' : 'white',
+											cursor: 'pointer',
+											fontSize: '14px'
+										}}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+											<circle cx="12" cy="12" r="10" stroke="#666" strokeWidth="2" fill="none"/>
+											<path stroke="#666" strokeWidth="2" d="M12 16v-4M12 8h.01"/>
+										</svg>
+										Public
+									</button>
+									<button
+										type="button"
+										onClick={() => toggleVisibility('private')}
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											width: '100%',
+											padding: '10px 16px',
+											border: 'none',
+											background: visibility === 'private' ? '#f0f0f0' : 'white',
+											cursor: 'pointer',
+											fontSize: '14px'
+										}}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+											<path stroke="#666" strokeWidth="2" d="M17 11h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2M12 12l4 4"/>
+											<rect x="3" y="11" width="18" height="11" rx="2" stroke="#666" strokeWidth="2"/>
+										</svg>
+										Private
+									</button>
+								</div>
 							)}
-							{visibility === 'public' ? 'Public' : 'Private'}
-						</button>
-						{showVisibilityMenu && (
-							<div style={{
-								position: 'absolute',
-								bottom: '100%',
-								left: 0,
-								marginBottom: '4px',
-								background: 'white',
-								border: '1px solid #ddd',
-								borderRadius: '8px',
-								boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-								zIndex: 100,
-								overflow: 'hidden'
-							}}>
-								<button
-									type="button"
-									onClick={() => toggleVisibility('public')}
-									style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: '8px',
-										width: '100%',
-										padding: '10px 16px',
-										border: 'none',
-										background: visibility === 'public' ? '#f0f0f0' : 'white',
-										cursor: 'pointer',
-										fontSize: '14px'
-									}}
-								>
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-										<circle cx="12" cy="12" r="10" stroke="#666" strokeWidth="2" fill="none"/>
-										<path stroke="#666" strokeWidth="2" d="M12 16v-4M12 8h.01"/>
-									</svg>
-									Public
-								</button>
-								<button
-									type="button"
-									onClick={() => toggleVisibility('private')}
-									style={{
-										display: 'flex',
-										alignItems: 'center',
-										gap: '8px',
-										width: '100%',
-										padding: '10px 16px',
-										border: 'none',
-										background: visibility === 'private' ? '#f0f0f0' : 'white',
-										cursor: 'pointer',
-										fontSize: '14px'
-									}}
-								>
-									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
-										<path stroke="#666" strokeWidth="2" d="M17 11h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2M12 12l4 4"/>
-										<rect x="3" y="11" width="18" height="11" rx="2" stroke="#666" strokeWidth="2"/>
-									</svg>
-									Private
-								</button>
-							</div>
-						)}
-					</div>
-					<button 
+						</div>
+						<button
 						type="button" 
 						className="_feed_inner_text_area_btn_link"
 						onClick={handlePost}
@@ -306,7 +306,94 @@ export default function CreatePostBox({ onPostCreated }) {
 							</button>
 						</div>
 					</div>
-					<div className="_feed_inner_text_area_btn">
+					<div className="_feed_inner_text_area_btn" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+						<div style={{ position: 'relative' }} ref={visibilityRef}>
+							<button 
+								type="button" 
+								onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
+								style={{
+									background: 'none',
+									border: 'none',
+									cursor: 'pointer',
+									display: 'flex',
+									alignItems: 'center',
+									gap: '6px',
+									padding: '8px 12px',
+									fontSize: '14px',
+									color: '#666'
+								}}
+							>
+								{visibility === 'public' ? (
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+										<circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="none"/>
+										<path stroke="currentColor" strokeWidth="2" d="M12 16v-4M12 8h.01"/>
+									</svg>
+								) : (
+									<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+										<path stroke="currentColor" strokeWidth="2" d="M17 11h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2M12 12l4 4"/>
+										<rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" strokeWidth="2"/>
+									</svg>
+								)}
+								{visibility === 'public' ? 'Public' : 'Private'}
+							</button>
+							{showVisibilityMenu && (
+								<div style={{
+									position: 'absolute',
+									bottom: '100%',
+									left: 0,
+									marginBottom: '4px',
+									background: 'white',
+									border: '1px solid #ddd',
+									borderRadius: '8px',
+									boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+									zIndex: 100,
+									overflow: 'hidden'
+								}}>
+									<button
+										type="button"
+										onClick={() => toggleVisibility('public')}
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											width: '100%',
+											padding: '10px 16px',
+											border: 'none',
+											background: visibility === 'public' ? '#f0f0f0' : 'white',
+											cursor: 'pointer',
+											fontSize: '14px'
+										}}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+											<circle cx="12" cy="12" r="10" stroke="#666" strokeWidth="2" fill="none"/>
+											<path stroke="#666" strokeWidth="2" d="M12 16v-4M12 8h.01"/>
+										</svg>
+										Public
+									</button>
+									<button
+										type="button"
+										onClick={() => toggleVisibility('private')}
+										style={{
+											display: 'flex',
+											alignItems: 'center',
+											gap: '8px',
+											width: '100%',
+											padding: '10px 16px',
+											border: 'none',
+											background: visibility === 'private' ? '#f0f0f0' : 'white',
+											cursor: 'pointer',
+											fontSize: '14px'
+										}}
+									>
+										<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24">
+											<path stroke="#666" strokeWidth="2" d="M17 11h2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h2M12 12l4 4"/>
+											<rect x="3" y="11" width="18" height="11" rx="2" stroke="#666" strokeWidth="2"/>
+										</svg>
+										Private
+									</button>
+								</div>
+							)}
+						</div>
 						<button 
 							type="button" 
 							className="_feed_inner_text_area_btn_link"
