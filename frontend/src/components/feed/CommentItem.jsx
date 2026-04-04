@@ -1,9 +1,15 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import CommentComposer from './CommentComposer';
 
 export default function CommentItem({ comment, currentUser, onLike, onReply, onShare }) {
+	const [showReplyBox, setShowReplyBox] = useState(false);
+
+	const handleReplyClick = () => {
+		setShowReplyBox(!showReplyBox);
+	};
+
 	return (
 		<div className="_comment_main">
 			<div className="_comment_image">
@@ -44,19 +50,24 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 						<div className="_comment_reply_num">
 							<ul className="_comment_reply_list">
 								<li><span onClick={onLike}>Like.</span></li>
-								<li><span onClick={onReply}>Reply.</span></li>
+								<li><span onClick={handleReplyClick}>Reply.</span></li>
 								<li><span onClick={onShare}>Share</span></li>
 								<li><span className="_time_link">.{comment?.timestamp || '1m'}</span></li>
 							</ul>
 						</div>
 					</div>
 				</div>
-				<CommentComposer 
-					currentUser={currentUser} 
-					placeholder="Write a reply"
-					textareaId={`reply-${comment?.id || 'default'}`}
-					onSubmit={(content) => onReply?.(comment?.id, content)}
-				/>
+				{showReplyBox && (
+					<CommentComposer 
+						currentUser={currentUser} 
+						placeholder="Write a reply"
+						textareaId={`reply-${comment?.id || 'default'}`}
+						onSubmit={(content) => {
+							onReply?.(comment?.id, content);
+							setShowReplyBox(false);
+						}}
+					/>
+				)}
 			</div>
 		</div>
 	);
