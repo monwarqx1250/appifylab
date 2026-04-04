@@ -85,4 +85,41 @@ module.exports = async function (fastify, opts) {
       reply.code(500).send({ error: 'Internal Server Error' });
     }
   });
+
+  fastify.put('/posts/:id', async (request, reply) => {
+    try {
+      const { id } = request.params;
+      const { content, visibility } = request.body;
+      const post = await postsService.updatePost(id, request.user.id, { content, visibility });
+      if (!post) {
+        return reply.code(404).send({ error: 'Post not found' });
+      }
+      reply.code(200).send(post);
+    } catch (err) {
+      if (err.message === 'Unauthorized') {
+        reply.code(403).send({ error: 'You can only update your own posts' });
+      } else {
+        fastify.log.error(err);
+        reply.code(500).send({ error: 'Internal Server Error' });
+      }
+    }
+  });
+
+  fastify.delete('/posts/:id', async (request, reply) => {
+    try {
+      const { id } = request.params;
+      const result = await postsService.deletePost(id, request.user.id);
+      if (!result) {
+        return reply.code(404).send({ error: 'Post not found' });
+      }
+      reply.code(200).send(result);
+    } catch (err) {
+      if (err.message === 'Unauthorized') {
+        reply.code(403).send({ error: 'You can only delete your own posts' });
+      } else {
+        fastify.log.error(err);
+        reply.code(500).send({ error: 'Internal Server Error' });
+      }
+    }
+  });
 };

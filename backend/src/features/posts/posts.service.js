@@ -86,6 +86,56 @@ class PostsService {
     if (!post) return null;
     return this.formatPostAttachments(post);
   }
+
+  async updatePost(postId, userId, data) {
+    const existingPost = await this.prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!existingPost) {
+      return null;
+    }
+
+    if (existingPost.authorId !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    const post = await this.prisma.post.update({
+      where: { id: postId },
+      data: {
+        content: data.content ?? existingPost.content,
+        visibility: data.visibility ?? existingPost.visibility
+      },
+      include: {
+        author: {
+          select: { id: true, firstName: true, lastName: true }
+        },
+        attachments: true
+      }
+    });
+
+    return this.formatPostAttachments(post);
+  }
+
+  async deletePost(postId, userId) {
+    const existingPost = await this.prisma.post.findUnique({
+      where: { id: postId }
+    });
+
+    if (!existingPost) {
+      return null;
+    }
+
+    if (existingPost.authorId !== userId) {
+      throw new Error('Unauthorized');
+    }
+
+    await this.prisma.post.delete({
+      where: { id: postId }
+    });
+
+    return { message: 'Post deleted successfully' };
+  }
 }
 
 module.exports = PostsService;
