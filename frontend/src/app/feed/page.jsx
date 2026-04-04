@@ -18,18 +18,71 @@ import DesktopNavbar from '@/components/layout/DesktopNavbar';
 import MobileHeader from '@/components/layout/MobileHeader';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useAuth } from '@/context/AuthContext';
+import { postsApi } from '@/lib/api';
 
 
 export default function FeedPage() {
 	const router = useRouter();
 	const { user, isAuthenticated, isLoading } = useAuth();
 	const [isDarkMode, setIsDarkMode] = useState(false);
+	const [posts, setPosts] = useState([]);
+	const [postsLoading, setPostsLoading] = useState(true);
+
+	const fetchPosts = async () => {
+		setPostsLoading(true);
+		const result = await postsApi.getAll();
+		if (result.ok) {
+			setPosts(result.data);
+		}
+		setPostsLoading(false);
+	};
 
 	useEffect(() => {
 		if (!isLoading && !isAuthenticated) {
 			router.push('/login');
 		}
 	}, [isLoading, isAuthenticated, router]);
+
+	useEffect(() => {
+		if (isAuthenticated) {
+			fetchPosts();
+		}
+	}, [isAuthenticated]);
+
+	const transformPost = (post) => ({
+		id: post.id,
+		author: {
+			name: `${post.author.firstName} ${post.author.lastName}`,
+			avatar: 'assets/images/post_img.png',
+		},
+		timestamp: formatTimeAgo(post.createdAt),
+		visibility: post.visibility,
+		title: post.content?.substring(0, 50) || '',
+		image: post.attachments?.[0]?.fileUrl || null,
+		reactions: [],
+		commentCount: post._count?.comments || 0,
+		shareCount: 0,
+		previousCommentsCount: 0,
+		comments: [],
+	});
+
+	const formatTimeAgo = (dateString) => {
+		const date = new Date(dateString);
+		const now = new Date();
+		const diffMs = now - date;
+		const diffMins = Math.floor(diffMs / 60000);
+		const diffHours = Math.floor(diffMs / 3600000);
+		const diffDays = Math.floor(diffMs / 86400000);
+		
+		if (diffMins < 1) return 'Just now';
+		if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+		if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+		return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+	};
+
+	const handlePostCreated = (newPost) => {
+		setPosts(prev => [transformPost(newPost), ...prev]);
+	};
 
 	if (isLoading) {
 		return (
@@ -87,7 +140,7 @@ export default function FeedPage() {
 	const handleReact = () => console.log('React clicked');
 	const handleComment = () => console.log('Comment clicked');
 	const handleShare = () => console.log('Share clicked');
-	const handleAddComment = (content) => console.log('Add comment:', content);
+	const handleAddComment = (content, postId) => console.log('Add comment:', content, postId);
 	const handleLoadPreviousComments = () => console.log('Load previous comments');
 	const handleLikeComment = (commentId) => console.log('Like comment:', commentId);
 	const handleReplyComment = (commentId, content) => console.log('Reply to comment:', commentId, content);
@@ -118,20 +171,28 @@ export default function FeedPage() {
 											{/* For Mobile */}
 											<StoryCarouselMobile />
 											{/* For Mobile End */}
-											<CreatePostBox />
-											<PostCard 
-												post={samplePost}
-												currentUser={currentUser}
-												onReact={handleReact}
-												onComment={handleComment}
-												onShare={handleShare}
-												onAddComment={handleAddComment}
-												onLoadPreviousComments={handleLoadPreviousComments}
-												onLikeComment={handleLikeComment}
-												onReplyComment={handleReplyComment}
-												onShareComment={handleShareComment}
-											/>
-											<PostCard post={samplePost} currentUser={currentUser} />
+											<CreatePostBox onPostCreated={handlePostCreated} />
+											{postsLoading ? (
+												<p>Loading posts...</p>
+											) : posts.length === 0 ? (
+												<p>No posts yet. Be the first to post!</p>
+											) : (
+												posts.map(post => (
+													<PostCard 
+														key={post.id}
+														post={transformPost(post)}
+														currentUser={currentUser}
+														onReact={handleReact}
+														onComment={handleComment}
+														onShare={handleShare}
+														onAddComment={(content) => handleAddComment(content, post.id)}
+														onLoadPreviousComments={handleLoadPreviousComments}
+														onLikeComment={handleLikeComment}
+														onReplyComment={handleReplyComment}
+														onShareComment={handleShareComment}
+													/>
+												))
+											)}
 										</div>
 									</div>
 								</div>
