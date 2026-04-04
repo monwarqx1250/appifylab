@@ -66,6 +66,26 @@ export const postsApi = {
   
   create: (data) => api.post('/posts', data),
   
+  createWithFiles: async (formData) => {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    const url = `${API_BASE_URL}/posts`;
+    
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      });
+      const data = await response.json();
+      return { ok: response.ok, status: response.status, data };
+    } catch (error) {
+      console.error('API request error:', error);
+      return { ok: false, status: 500, data: { error: 'Network error' } };
+    }
+  },
+  
   update: (id, data) => api.put(`/posts/${id}`, data),
   
   delete: (id) => api.delete(`/posts/${id}`),
