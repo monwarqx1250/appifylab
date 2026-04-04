@@ -43,6 +43,8 @@ export default function PostCard({
 				onReact={onReact}
 				onComment={onComment}
 				onShare={onShare}
+				isLiked={post?.isLiked || false}
+				postId={post?.id}
 			/>
 			<CommentThread 
 				comments={post?.comments || []}

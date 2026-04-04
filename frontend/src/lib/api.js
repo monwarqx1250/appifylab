@@ -23,7 +23,19 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    const text = await response.text();
+    
+    let data;
+    try {
+      data = text ? JSON.parse(text) : null;
+    } catch (parseError) {
+      console.error('JSON parse error:', parseError, 'Response text:', text);
+      return {
+        ok: false,
+        status: response.status,
+        data: { error: 'Invalid JSON response' },
+      };
+    }
     
     return {
       ok: response.ok,
@@ -43,16 +55,16 @@ async function request(endpoint, options = {}) {
 export const api = {
   get: (endpoint) => request(endpoint, { method: 'GET' }),
   
-  post: (endpoint, body) => 
+  post: (endpoint, b) => 
     request(endpoint, { 
       method: 'POST', 
-      body: JSON.stringify(body) 
+      body: JSON.stringify(b) 
     }),
   
-  put: (endpoint, body) => 
+  put: (endpoint, b) => 
     request(endpoint, { 
       method: 'PUT', 
-      body: JSON.stringify(body) 
+      body: JSON.stringify(b) 
     }),
   
   delete: (endpoint) => request(endpoint, { method: 'DELETE' }),
@@ -92,12 +104,12 @@ export const postsApi = {
 };
 
 export const commentsApi = {
-  getByPostId: (postId) => api.get(`/comments?postId=${postId}`),
+  getByPostId: (postId) => api.get(`/posts/${postId}/comments`),
   
   create: (data) => api.post('/comments', data),
 };
 
 export const likesApi = {
   toggle: (entityId, entityType) => 
-    api.post('/likes', { entityId, entityType }),
+    api.post('/likes/toggle', { entityId, entityType }),
 };

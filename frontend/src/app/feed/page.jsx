@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import StoryCarousel from '@/components/feed/StoryCarousel';
@@ -19,6 +19,8 @@ import MobileHeader from '@/components/layout/MobileHeader';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import { useAuth } from '@/context/AuthContext';
 import { postsApi } from '@/lib/api';
+import { useLike } from '@/hooks/useLike';
+import { useComments } from '@/hooks/useComments';
 
 
 export default function FeedPage() {
@@ -27,6 +29,9 @@ export default function FeedPage() {
 	const [isDarkMode, setIsDarkMode] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const [postsLoading, setPostsLoading] = useState(true);
+
+	const { likePost, likeComment, loading: likeLoading } = useLike();
+	const { fetchComments, addComment, replyToComment, loading: commentLoading } = useComments();
 
 	const fetchPosts = async () => {
 		setPostsLoading(true);
@@ -60,6 +65,8 @@ export default function FeedPage() {
 		title: post.content?.substring(0, 50) || '',
 		image: post.attachments?.[0]?.fileUrl || null,
 		reactions: [],
+		likesCount: post.likesCount || post._count?.likes || 0,
+		isLiked: post.isLiked || false,
 		commentCount: post._count?.comments || 0,
 		shareCount: 0,
 		previousCommentsCount: 0,
@@ -80,9 +87,103 @@ export default function FeedPage() {
 		return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 	};
 
+	const transformComment = (comment) => ({
+		id: comment.id,
+		author: {
+			name: `${comment.author?.firstName || 'User'} ${comment.author?.lastName || ''}`.trim(),
+			avatar: comment.author?.avatar || 'assets/images/comment_img.png',
+		},
+		content: comment.content,
+		likes: comment._count?.likes || 0,
+		timestamp: formatTimeAgo(comment.createdAt),
+		replies: comment.replies || [],
+	});
+
 	const handlePostCreated = (newPost) => {
 		setPosts(prev => [transformPost(newPost), ...prev]);
 	};
+
+	const handleReact = useCallback(async (postId) => {
+		console.log('handleReact called with postId:', postId);
+		const result = await likePost(postId);
+		console.log('likePost result:', result);
+		if (!result) return;
+		
+		setPosts(prev => prev.map(post => {
+			if (post.id === postId) {
+				const isLiked = result?.liked ?? !post.isLiked;
+				return {
+					...post,
+					isLiked,
+					likesCount: isLiked ? (post.likesCount || 0) + 1 : Math.max(0, (post.likesCount || 1) - 1),
+				};
+			}
+			return post;
+		}));
+	}, [likePost]);
+
+	const handleComment = useCallback((postId) => {
+		const post = posts.find(p => p.id === postId);
+		if (post && !post.commentsLoaded) {
+			fetchComments(postId).then(comments => {
+				setPosts(prev => prev.map(p => {
+					if (p.id === postId) {
+						return {
+							...p,
+							comments: comments,
+							commentsLoaded: true,
+						};
+					}
+					return p;
+				}));
+			});
+		}
+	}, [posts, fetchComments]);
+
+	const handleShare = useCallback(() => console.log('Share clicked'), []);
+
+	const handleAddComment = useCallback(async (content, postId) => {
+		const newComment = await addComment(postId, content);
+		if (newComment) {
+			setPosts(prev => prev.map(post => {
+				if (post.id === postId) {
+					return {
+						...post,
+						comments: [...(post.comments || []), transformComment(newComment)],
+						commentCount: (post.commentCount || 0) + 1,
+					};
+				}
+				return post;
+			}));
+		}
+	}, [addComment, transformComment]);
+
+	const handleLoadPreviousComments = useCallback((postId) => {
+		console.log('Load previous comments for post:', postId);
+	}, []);
+
+	const handleLikeComment = useCallback(async (commentId, postId) => {
+		await likeComment(commentId);
+	}, [likeComment]);
+
+	const handleReplyComment = useCallback(async (content, parentId, postId) => {
+		const newComment = await replyToComment(postId, content, parentId);
+		if (newComment) {
+			setPosts(prev => prev.map(post => {
+				if (post.id === postId) {
+					return {
+						...post,
+						comments: [...(post.comments || []), transformComment(newComment)],
+					};
+				}
+				return post;
+			}));
+		}
+	}, [replyToComment, transformComment]);
+
+	const handleShareComment = useCallback((commentId) => {
+		console.log('Share comment:', commentId);
+	}, []);
 
 	if (isLoading) {
 		return (
@@ -137,15 +238,6 @@ export default function FeedPage() {
 		avatar: 'assets/images/comment_img.png',
 	} : null;
 
-	const handleReact = () => console.log('React clicked');
-	const handleComment = () => console.log('Comment clicked');
-	const handleShare = () => console.log('Share clicked');
-	const handleAddComment = (content, postId) => console.log('Add comment:', content, postId);
-	const handleLoadPreviousComments = () => console.log('Load previous comments');
-	const handleLikeComment = (commentId) => console.log('Like comment:', commentId);
-	const handleReplyComment = (commentId, content) => console.log('Reply to comment:', commentId, content);
-	const handleShareComment = (commentId) => console.log('Share comment:', commentId);
-
 	return (
 		<>
 
@@ -197,8 +289,8 @@ export default function FeedPage() {
 									</div>
 								</div>
 								{/*  Layout Middle  */}
-							<RightSidebar user={user} />
-						</div>
+								<RightSidebar user={user} />
+							</div>
 						</div>
 					</div>
 					{/*  Main Layout Structure  */}
