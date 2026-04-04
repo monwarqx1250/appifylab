@@ -21,6 +21,52 @@ import MobileBottomNav from '@/components/layout/MobileBottomNav';
 export default function FeedPage() {
 	const [isDarkMode, setIsDarkMode] = useState(false);
 
+	const samplePost = {
+		author: {
+			name: 'Karim Saif',
+			avatar: 'assets/images/post_img.png',
+		},
+		timestamp: '5 minute ago',
+		visibility: 'Public',
+		title: '-Healthy Tracking App',
+		image: 'assets/images/timeline_img.png',
+		reactions: [
+			{ image: 'assets/images/react_img1.png' },
+			{ image: 'assets/images/react_img2.png' },
+			{ image: 'assets/images/react_img3.png' },
+			{ image: 'assets/images/react_img4.png' },
+			{ image: 'assets/images/react_img5.png' },
+		],
+		commentCount: 12,
+		shareCount: 122,
+		previousCommentsCount: 4,
+		comments: [
+			{
+				id: 1,
+				author: {
+					name: 'Radovan SkillArena',
+					avatar: 'assets/images/txt_img.png',
+				},
+				content: 'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.',
+				likes: 198,
+				timestamp: '21m',
+			},
+		],
+	};
+
+	const currentUser = {
+		avatar: 'assets/images/comment_img.png',
+	};
+
+	const handleReact = () => console.log('React clicked');
+	const handleComment = () => console.log('Comment clicked');
+	const handleShare = () => console.log('Share clicked');
+	const handleAddComment = (content) => console.log('Add comment:', content);
+	const handleLoadPreviousComments = () => console.log('Load previous comments');
+	const handleLikeComment = (commentId) => console.log('Like comment:', commentId);
+	const handleReplyComment = (commentId, content) => console.log('Reply to comment:', commentId, content);
+	const handleShareComment = (commentId) => console.log('Share comment:', commentId);
+
 	return (
 		<>
 
@@ -47,8 +93,19 @@ export default function FeedPage() {
 											<StoryCarouselMobile />
 											{/* For Mobile End */}
 											<CreatePostBox />
-											<PostCard />
-											<PostCard />
+											<PostCard 
+												post={samplePost}
+												currentUser={currentUser}
+												onReact={handleReact}
+												onComment={handleComment}
+												onShare={handleShare}
+												onAddComment={handleAddComment}
+												onLoadPreviousComments={handleLoadPreviousComments}
+												onLikeComment={handleLikeComment}
+												onReplyComment={handleReplyComment}
+												onShareComment={handleShareComment}
+											/>
+											<PostCard post={samplePost} currentUser={currentUser} />
 										</div>
 									</div>
 								</div>
