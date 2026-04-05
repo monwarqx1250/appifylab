@@ -3,16 +3,12 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import StoryCarousel from '@/components/feed/StoryCarousel';
 import StoryCarouselMobile from '@/components/feed/StoryCarouselMobile';
-
 import CreatePostBox from '@/components/feed/CreatePostBox';
 import PostCard from '@/components/feed/PostCard';
-
 import LeftSidebar from '@/components/layout/LeftSidebar';
 import RightSidebar from '@/components/layout/RightSidebar';
-
 import ThemeSwitcher from '@/components/layout/ThemeSwitcher';
 import DesktopNavbar from '@/components/layout/DesktopNavbar';
 import MobileHeader from '@/components/layout/MobileHeader';
@@ -21,7 +17,7 @@ import { useAuth } from '@/context/AuthContext';
 import { postsApi } from '@/lib/api';
 import { useLike } from '@/hooks/useLike';
 import { useComments } from '@/hooks/useComments';
-
+import { transformPost, transformComment, buildCurrentUser } from '@/utils/feed';
 
 export default function FeedPage() {
 	const router = useRouter();
@@ -36,7 +32,6 @@ export default function FeedPage() {
 	const fetchPosts = async () => {
 		setPostsLoading(true);
 		const result = await postsApi.getAll();
-		console.log(result)
 		if (result.ok) {
 			setPosts(result.data);
 		}
@@ -55,55 +50,9 @@ export default function FeedPage() {
 		}
 	}, [isAuthenticated]);
 
-	const transformPost = (post) => ({
-		id: post.id,
-		author: {
-			name: post.author?.name || `${post.author?.firstName || ''} ${post.author?.lastName || ''}`.trim(),
-			avatar: 'assets/images/post_img.png',
-		},
-		timestamp: formatTimeAgo(post.createdAt),
-		visibility: post.visibility,
-		title: post.content?.substring(0, 50) || '',
-		image: post.attachments?.[0]?.fileUrl || null,
-		reactions: [],
-		likesCount: post.likesCount || post._count?.likes || 0,
-		isLiked: post.isLiked || false,
-		likedBy: post.likedBy || [],
-		commentCount: post.commentCount ?? post._count?.comments ?? 0,
-		shareCount: 0,
-		comments: post.comments || [],
-	});
-
-	const formatTimeAgo = (dateString) => {
-		const date = new Date(dateString);
-		const now = new Date();
-		const diffMs = now - date;
-		const diffMins = Math.floor(diffMs / 60000);
-		const diffHours = Math.floor(diffMs / 3600000);
-		const diffDays = Math.floor(diffMs / 86400000);
-		
-		if (diffMins < 1) return 'Just now';
-		if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-		if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-		return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-	};
-
-	const transformComment = (comment) => ({
-		id: comment.id,
-		author: {
-			name: comment.author?.name || 'User',
-			avatar: comment.author?.avatar || 'assets/images/comment_img.png',
-		},
-		content: comment.content,
-		likes: comment.likes || 0,
-		isLiked: comment.isLiked || false,
-		timestamp: comment.timestamp || '1m',
-		repliesCount: comment.repliesCount || 0,
-	});
-
-	const handlePostCreated = (newPost) => {
+	const handlePostCreated = useCallback((newPost) => {
 		setPosts(prev => [transformPost(newPost), ...prev]);
-	};
+	}, []);
 
 	const handleReact = useCallback(async (postId) => {
 		const result = await likePost(postId);
@@ -116,10 +65,8 @@ export default function FeedPage() {
 				
 				let newLikedBy;
 				if (isLiked) {
-					// Add current user to likedBy
 					newLikedBy = [{ id: user?.id, name: currentUserName }, ...(post.likedBy || [])].slice(0, 5);
 				} else {
-					// Remove current user from likedBy
 					newLikedBy = (post.likedBy || []).filter(l => l.id !== user?.id);
 				}
 				
@@ -174,8 +121,7 @@ export default function FeedPage() {
 		console.log('Load previous comments for post:', postId);
 	}, []);
 
-	const handleLikeComment = useCallback(async (commentId, postId) => {
-		console.log(`liking comment comment id: ${commentId}`)
+	const handleLikeComment = useCallback(async (commentId) => {
 		await likeComment(commentId);
 	}, [likeComment]);
 
@@ -199,6 +145,10 @@ export default function FeedPage() {
 		console.log('Share comment:', commentId);
 	}, []);
 
+	const handleDeletePost = useCallback((postId) => {
+		setPosts(prev => prev.filter(p => p.id !== postId));
+	}, []);
+
 	if (isLoading) {
 		return (
 			<div className="_layout_main_wrapper" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
@@ -211,40 +161,25 @@ export default function FeedPage() {
 		return null;
 	}
 
-	const currentUser = user ? {
-		id: user.id,
-		firstName: user.firstName,
-		lastName: user.lastName,
-		email: user.email,
-		avatar: 'assets/images/comment_img.png',
-	} : null;
+	const currentUser = buildCurrentUser(user);
 
-	console.log('current user',currentUser) // can see null sometimes. need to be fixed
 	return (
 		<>
-
-			{/* Feed Section Start */}
 			<div className={`_layout _layout_main_wrapper ${isDarkMode ? '_dark_wrapper' : ''}`}>
 				<ThemeSwitcher isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} />
 				<div className="_main_layout">
 					<DesktopNavbar user={user} />
 					<MobileHeader user={user} />
 					<MobileBottomNav user={user} />
-					{/*  Main Layout Structure  */}
 					<div className="container _custom_container">
 						<div className="_layout_inner_wrap">
 							<div className="row">
 								<LeftSidebar user={user} />
-								{/*  Layout Middle  */}
 								<div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
 									<div className="_layout_middle_wrap">
 										<div className="_layout_middle_inner">
-											{/* For Desktop */}
 											<StoryCarousel />
-											{/* For Desktop End */}
-											{/* For Mobile */}
 											<StoryCarouselMobile />
-											{/* For Mobile End */}
 											<CreatePostBox onPostCreated={handlePostCreated} />
 											{postsLoading ? (
 												<p>Loading posts...</p>
@@ -264,24 +199,19 @@ export default function FeedPage() {
 														onLikeComment={handleLikeComment}
 														onReplyComment={handleReplyComment}
 														onShareComment={handleShareComment}
-														onDeletePost={(postId) => setPosts(prev => prev.filter(p => p.id !== postId))}
+														onDeletePost={handleDeletePost}
 													/>
 												))
 											)}
 										</div>
 									</div>
 								</div>
-								{/*  Layout Middle  */}
 								<RightSidebar user={user} />
 							</div>
 						</div>
 					</div>
-					{/*  Main Layout Structure  */}
 				</div>
-				{/* Feed Section End */}
 			</div>
-
-
 		</>
 	);
 }
