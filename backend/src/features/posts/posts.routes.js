@@ -6,51 +6,7 @@ module.exports = async function (fastify, opts) {
 
   fastify.addHook('onRequest', fastify.authenticate);
 
-  fastify.post('/posts', {
-    schema: {
-      tags: ['posts'],
-      summary: 'Create a new post',
-      description: 'Creates a new post with optional file attachments. Requires JWT authentication.',
-      consumes: ['multipart/form-data', 'application/json'],
-      response: {
-        201: {
-          description: 'Post created successfully',
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                properties: {
-                  id: { type: 'string' },
-                  content: { type: 'string' },
-                  visibility: { type: 'string' },
-                  author: {
-                    type: 'object',
-                    properties: {
-                      id: { type: 'string' },
-                      firstName: { type: 'string' },
-                      lastName: { type: 'string' }
-                    }
-                  },
-                  attachments: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        id: { type: 'string' },
-                        fileUrl: { type: 'string' },
-                        fileType: { type: 'string' }
-                      }
-                    }
-                  },
-                  createdAt: { type: 'string', format: 'date-time' }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }, async (request, reply) => {
+  fastify.post('/posts', async (request, reply) => {
     try {
       let body;
       const contentType = request.headers['content-type'] || '';
@@ -62,12 +18,12 @@ module.exports = async function (fastify, opts) {
       }
       
       const post = await postsService.createPost(request.user.id, body)
-      reply.code(201).send(post)
+      reply.code(201).send(post);
     } catch (err) {
       fastify.log.error(err)
       reply.code(500).send({ error: 'Internal Server Error' })
     }
-  })
+  });
 
   fastify.get('/posts', { schema: getPostsSchema }, async (request, reply) => {
     try {

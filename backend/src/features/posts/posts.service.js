@@ -45,11 +45,23 @@ class PostsService {
         author: {
           select: { id: true, firstName: true, lastName: true }
         },
-        attachments: true
+        attachments: true,
+        _count: {
+          select: { comments: true, likes: true }
+        }
       }
     });
 
-    return this.formatPostAttachments(post);
+    const result = {
+      ...this.formatPostAttachments(post),
+      isLiked: false,
+      likesCount: 0,
+      likedBy: [],
+      commentCount: 0,
+      comments: [],
+    };
+    
+    return result;
   }
 
   formatPostAttachments(post) {

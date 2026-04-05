@@ -33,7 +33,7 @@ export default function FeedPage() {
 		setPostsLoading(true);
 		const result = await postsApi.getAll();
 		if (result.ok) {
-			setPosts(result.data);
+			setPosts(result.data.map(transformPost));
 		}
 		setPostsLoading(false);
 	};
@@ -51,7 +51,10 @@ export default function FeedPage() {
 	}, [isAuthenticated]);
 
 	const handlePostCreated = useCallback((newPost) => {
-		setPosts(prev => [transformPost(newPost), ...prev]);
+		console.log('handlePostCreated - raw:', newPost);
+		const transformed = transformPost(newPost);
+		console.log('handlePostCreated - transformed:', transformed);
+		setPosts(prev => [transformed, ...prev]);
 	}, []);
 
 	const handleReact = useCallback(async (postId) => {
@@ -189,7 +192,7 @@ export default function FeedPage() {
 												posts.map(post => (
 													<PostCard 
 														key={post.id}
-														post={transformPost(post)}
+														post={post}
 														currentUser={currentUser}
 														onReact={handleReact}
 														onComment={handleComment}

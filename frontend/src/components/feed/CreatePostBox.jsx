@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { postsApi } from '@/lib/api';
+import PostStatusIndicator from './PostStatusIndicator';
 
 export default function CreatePostBox({ onPostCreated }) {
 	const [content, setContent] = useState('');
 	const [visibility, setVisibility] = useState('public');
-	const [isPosting, setIsPosting] = useState(false);
+	const [postStatus, setPostStatus] = useState('idle');
 	const [selectedImage, setSelectedImage] = useState(null);
 	const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
 	const fileInputRef = useRef(null);
@@ -29,7 +30,7 @@ export default function CreatePostBox({ onPostCreated }) {
 	const handlePost = async () => {
 		if (!content.trim()) return;
 		
-		setIsPosting(true);
+		setPostStatus('posting');
 		
 		let result;
 		
@@ -50,15 +51,19 @@ export default function CreatePostBox({ onPostCreated }) {
 			if (fileInputRef.current) {
 				fileInputRef.current.value = '';
 			}
+			setPostStatus('success');
 			onPostCreated?.(result.data);
 		} else {
 			console.error('Failed to create post:', result.data);
+			setPostStatus('idle');
 		}
-		setIsPosting(false);
 	};
+
+	const isPosting = postStatus === 'posting';
 
 	return (
 		<div className="_feed_inner_text_area  _b_radious6 _padd_b24 _padd_t24 _padd_r24 _padd_l24 _mar_b16">
+			<PostStatusIndicator status={postStatus} onStatusChange={setPostStatus} />
 			<input
 				type="file"
 				ref={fileInputRef}

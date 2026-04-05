@@ -41,7 +41,21 @@ const createPostSchema = {
             }
           }
         },
-        createdAt: { type: 'string', format: 'date-time' }
+        createdAt: { type: 'string', format: 'date-time' },
+        isLiked: { type: 'boolean' },
+        likesCount: { type: 'integer' },
+        likedBy: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              name: { type: 'string' }
+            }
+          }
+        },
+        commentCount: { type: 'integer' },
+        comments: { type: 'array', items: { type: 'object' } }
       }
     },
     401: {
