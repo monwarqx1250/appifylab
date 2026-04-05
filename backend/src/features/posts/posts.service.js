@@ -88,6 +88,7 @@ class PostsService {
           take: 5
         },
         comments: {
+          where: { parentId: null },
           take: 2,
           orderBy: { createdAt: 'desc' },
           include: {
@@ -150,6 +151,7 @@ class PostsService {
           take: 5
         },
         comments: {
+          where: { parentId: null },
           take: 2,
           orderBy: { createdAt: 'desc' },
           include: {

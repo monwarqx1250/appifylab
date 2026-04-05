@@ -1,4 +1,4 @@
-const { createCommentSchema, getCommentsSchema } = require('./comments.schemas');
+const { createCommentSchema, getCommentsSchema, getRepliesSchema } = require('./comments.schemas');
 const CommentsService = require('./comments.service');
 
 module.exports = async function (fastify, opts) {
@@ -21,7 +21,7 @@ module.exports = async function (fastify, opts) {
     try {
       const { postId } = request.params;
       const { page = 1, limit = 3 } = request.query;
-      const result = await commentsService.getCommentsByPostId(postId, page, limit, false);
+      const result = await commentsService.getCommentsByPostId(postId, request.user.id, page, limit, false);
       reply.code(200).send(result);
     } catch (err) {
       fastify.log.error(err);
@@ -35,6 +35,19 @@ module.exports = async function (fastify, opts) {
       const { postId } = request.params;
       const comments = await commentsService.getAllComments(postId);
       reply.code(200).send(comments);
+    } catch (err) {
+      fastify.log.error(err);
+      reply.code(500).send({ error: 'Internal Server Error' });
+    }
+  });
+
+  // Get replies for a specific comment
+  fastify.get('/comments/:commentId/replies', { schema: getRepliesSchema }, async (request, reply) => {
+    try {
+      const { commentId } = request.params;
+      const { page = 1, limit = 10 } = request.query;
+      const result = await commentsService.getReplies(commentId, request.user.id, page, limit);
+      reply.code(200).send(result);
     } catch (err) {
       fastify.log.error(err);
       reply.code(500).send({ error: 'Internal Server Error' });

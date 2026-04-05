@@ -20,7 +20,7 @@ function CommentItem({ comment, currentUser, onLike, onReply }) {
 					<div className="_comment_name">
 						<a href="profile.html">
 							<h4 className="_comment_name_title" style={{ fontSize: '13px', fontWeight: '600', margin: 0 }}>
-								{`${comment.author?.firstName || ''} ${comment.author?.lastName || ''}`.trim() || 'User'}
+								{comment.author?.name || 'User'}
 							</h4>
 						</a>
 					</div>
@@ -66,18 +66,16 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 		
 		try {
 			const result = await commentsApi.getAllByPostId(postId);
-			if (result.ok) {
-				// Transform comments for display
+			if (result.ok && result.data) {
 				const transformed = result.data.map(c => ({
 					id: c.id,
 					author: {
-						firstName: c.author?.firstName,
-						lastName: c.author?.lastName,
+						name: `${c.author?.firstName || ''} ${c.author?.lastName || ''}`.trim() || 'User',
 						avatar: c.author?.avatar || 'assets/images/txt_img.png'
 					},
 					content: c.content,
 					likes: c._count?.likes || 0,
-					timestamp: new Date(c.createdAt).toLocaleDateString(),
+					timestamp: c.createdAt ? new Date(c.createdAt).toLocaleDateString() : '1m',
 					replies: c._count?.replies || 0
 				}));
 				setComments(transformed);
@@ -105,8 +103,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 				const newComment = {
 					id: result.data.id,
 					author: {
-						firstName: currentUser?.firstName,
-						lastName: currentUser?.lastName,
+						name: `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'User',
 						avatar: currentUser?.avatar || 'assets/images/comment_img.png'
 					},
 					content: content,

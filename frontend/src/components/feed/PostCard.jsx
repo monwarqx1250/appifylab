@@ -53,19 +53,13 @@ export default function PostCard({
 					postId={post?.id}
 					onLikesClick={() => setShowLikesModal(true)}
 				/>
-				<PostActionBar 
-					onReact={onReact}
-					onComment={(postId) => {
-						if (totalComments > 2) {
-							setShowCommentsModal(true);
-						} else {
-							onComment?.(postId);
-						}
-					}}
-					onShare={onShare}
-					isLiked={post?.isLiked || false}
-					postId={post?.id}
-				/>
+			<PostActionBar 
+				onReact={onReact}
+				onComment={() => setShowCommentsModal(true)}
+				onShare={onShare}
+				isLiked={post?.isLiked || false}
+				postId={post?.id}
+			/>
 				{/* Comments section */}
 				<CommentThread 
 					comments={latestComments}

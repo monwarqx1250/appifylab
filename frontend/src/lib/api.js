@@ -110,6 +110,9 @@ export const commentsApi = {
   getAllByPostId: (postId) => 
     api.get(`/posts/${postId}/all-comments`),
   
+  getReplies: (commentId, page = 1, limit = 10) => 
+    api.get(`/comments/${commentId}/replies?page=${page}&limit=${limit}`),
+  
   create: (data) => api.post('/comments', data),
 };
 

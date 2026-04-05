@@ -57,7 +57,7 @@ export default function FeedPage() {
 	const transformPost = (post) => ({
 		id: post.id,
 		author: {
-			name: `${post.author.firstName} ${post.author.lastName}`,
+			name: post.author?.name || `${post.author?.firstName || ''} ${post.author?.lastName || ''}`.trim(),
 			avatar: 'assets/images/post_img.png',
 		},
 		timestamp: formatTimeAgo(post.createdAt),
@@ -90,13 +90,14 @@ export default function FeedPage() {
 	const transformComment = (comment) => ({
 		id: comment.id,
 		author: {
-			name: `${comment.author?.firstName || 'User'} ${comment.author?.lastName || ''}`.trim(),
+			name: comment.author?.name || 'User',
 			avatar: comment.author?.avatar || 'assets/images/comment_img.png',
 		},
 		content: comment.content,
-		likes: comment._count?.likes || 0,
-		timestamp: formatTimeAgo(comment.createdAt),
-		replies: comment.replies || [],
+		likes: comment.likes || 0,
+		isLiked: comment.isLiked || false,
+		timestamp: comment.timestamp || '1m',
+		repliesCount: comment.repliesCount || 0,
 	});
 
 	const handlePostCreated = (newPost) => {
@@ -166,7 +167,7 @@ export default function FeedPage() {
 				return post;
 			}));
 		}
-	}, [addComment, transformComment]);
+	}, [addComment]);
 
 	const handleLoadPreviousComments = useCallback((postId) => {
 		console.log('Load previous comments for post:', postId);
@@ -185,12 +186,13 @@ export default function FeedPage() {
 					return {
 						...post,
 						comments: [...(post.comments || []), transformComment(newComment)],
+						commentCount: (post.commentCount || 0) + 1,
 					};
 				}
 				return post;
 			}));
 		}
-	}, [replyToComment, transformComment]);
+	}, [replyToComment]);
 
 	const handleShareComment = useCallback((commentId) => {
 		console.log('Share comment:', commentId);

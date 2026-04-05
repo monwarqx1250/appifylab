@@ -38,6 +38,54 @@ const getCommentsSchema = {
               content: { type: 'string' },
               timestamp: { type: 'string' },
               likes: { type: 'number' },
+              isLiked: { type: 'boolean' },
+              repliesCount: { type: 'number' }
+            }
+          }
+        },
+        hasMore: { type: 'boolean' },
+        totalCount: { type: 'number' }
+      }
+    }
+  }
+};
+
+const getRepliesSchema = {
+  params: {
+    type: 'object',
+    required: ['commentId'],
+    properties: {
+      commentId: { type: 'string' }
+    }
+  },
+  querystring: {
+    type: 'object',
+    properties: {
+      page: { type: 'integer', minimum: 1, default: 1 },
+      limit: { type: 'integer', minimum: 1, maximum: 50, default: 10 }
+    }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        comments: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              author: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' }
+                }
+              },
+              content: { type: 'string' },
+              timestamp: { type: 'string' },
+              likes: { type: 'number' },
+              isLiked: { type: 'boolean' },
               repliesCount: { type: 'number' }
             }
           }
@@ -51,5 +99,6 @@ const getCommentsSchema = {
 
 module.exports = {
   createCommentSchema,
-  getCommentsSchema
+  getCommentsSchema,
+  getRepliesSchema
 };

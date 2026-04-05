@@ -40,7 +40,7 @@ export default function CommentThread({
 					comment={comment}
 					currentUser={currentUser}
 					onLike={() => onLikeComment?.(comment.id)}
-					onReply={(content) => onReplyComment?.(comment.id, content)}
+					onReply={(content) => onReplyComment?.(content, comment.id)}
 					onShare={() => onShareComment?.(comment.id)}
 				/>
 			))}

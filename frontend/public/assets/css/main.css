@@ -6002,6 +6002,49 @@
 ._comment_reply_list li ._time_link {
     color:var(--color7);
 }
+._replies_link {
+    margin: 8px 0 0;
+}
+._replies_text {
+    color: #65676b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+._replies_text:hover {
+    text-decoration: underline;
+}
+._replies_container {
+    margin: 12px 0 0 0;
+    padding-left: 16px;
+    border-left: 2px solid #ddd;
+}
+._comment_nested {
+    margin-top: 12px;
+}
+._load_more_replies {
+    margin: 8px 0;
+}
+._load_more_text {
+    color: #65676b;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+._load_more_text:hover {
+    text-decoration: underline;
+}
+._hide_replies {
+    margin: 8px 0 0;
+}
+._hide_replies_text {
+    color: #65676b;
+    font-size: 13px;
+    cursor: pointer;
+}
+._hide_replies_text:hover {
+    text-decoration: underline;
+}
 ._previous_comment {
     margin:0 0 20px;
 }
