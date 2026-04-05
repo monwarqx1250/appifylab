@@ -310,6 +310,10 @@ class PostsService {
       throw new Error('Unauthorized');
     }
 
+    await this.prisma.postAttachment.deleteMany({ where: { postId } });
+    await this.prisma.comment.deleteMany({ where: { postId } });
+    await this.prisma.like.deleteMany({ where: { postId } });
+    
     await this.prisma.post.delete({
       where: { id: postId }
     });

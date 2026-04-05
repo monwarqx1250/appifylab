@@ -16,6 +16,7 @@ export function transformPost(post) {
   return {
     id: post.id,
     author: {
+      id: post.author?.id,
       name: post.author?.name || `${post.author?.firstName || ''} ${post.author?.lastName || ''}`.trim(),
       avatar: 'assets/images/post_img.png',
     },

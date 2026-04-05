@@ -5,7 +5,6 @@ import React, { useEffect, useRef, useState } from 'react';
 export default function PostCardHeader({ author, timestamp, visibility, onMenuToggle, onDelete, isOwner }) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const menuRef = useRef(null);
-
 	useEffect(() => {
 		if (!menuOpen) return;
 		function closeOnOutside(event) {
@@ -36,7 +35,7 @@ export default function PostCardHeader({ author, timestamp, visibility, onMenuTo
 				<div className="_feed_inner_timeline_post_box_txt">
 					<h4 className="_feed_inner_timeline_post_box_title">{author?.name || 'Unknown'}</h4>
 					<p className="_feed_inner_timeline_post_box_para">
-						{timestamp || 'Just now'} · 
+						{timestamp || 'Just now'} ·
 						<a href="#0">{visibility || 'Public'}</a>
 					</p>
 				</div>
@@ -89,28 +88,32 @@ export default function PostCardHeader({ author, timestamp, visibility, onMenuTo
 								Hide
 							</a>
 						</li>
-						<li className="_feed_timeline_dropdown_item">
-							<a href="#0" className="_feed_timeline_dropdown_link">
-								<span>
-									<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
-										<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M8.25 3H3a1.5 1.5 0 00-1.5 1.5V15A1.5 1.5 0 003 16.5h10.5A1.5 1.5 0 0015 15V9.75" />
-										<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M13.875 1.875a1.591 1.591 0 112.25 2.25L9 11.25 6 12l.75-3 7.125-7.125z" />
-									</svg>
-								</span>
-								Edit Post
-							</a>
-						</li>
+
 						{isOwner && (
-						<li className="_feed_timeline_dropdown_item">
-							<a href="#0" className="_feed_timeline_dropdown_link" onClick={() => onDelete?.()}>
-								<span>
-									<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
-										<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M2.25 4.5h13.5M6 4.5V3a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0112 3v1.5m2.25 0V15a1.5 1.5 0 01-1.5 1.5h-7.5a1.5 1.5 0 01-1.5-1.5V4.5h10.5zM7.5 8.25v4.5M10.5 8.25v4.5" />
-									</svg>
-								</span>
-								Delete Post
-							</a>
-						</li>
+							<>
+								<li className="_feed_timeline_dropdown_item">
+									<a href="#0" className="_feed_timeline_dropdown_link">
+										<span>
+											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
+												<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M8.25 3H3a1.5 1.5 0 00-1.5 1.5V15A1.5 1.5 0 003 16.5h10.5A1.5 1.5 0 0015 15V9.75" />
+												<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M13.875 1.875a1.591 1.591 0 112.25 2.25L9 11.25 6 12l.75-3 7.125-7.125z" />
+											</svg>
+										</span>
+										Edit Post
+									</a>
+								</li>
+
+								<li className="_feed_timeline_dropdown_item">
+									<a href="#0" className="_feed_timeline_dropdown_link" onClick={() => onDelete?.()}>
+										<span>
+											<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
+												<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M2.25 4.5h13.5M6 4.5V3a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0112 3v1.5m2.25 0V15a1.5 1.5 0 01-1.5 1.5h-7.5a1.5 1.5 0 01-1.5-1.5V4.5h10.5zM7.5 8.25v4.5M10.5 8.25v4.5" />
+											</svg>
+										</span>
+										Delete Post
+									</a>
+								</li>
+							</>
 						)}
 					</ul>
 				</div>
