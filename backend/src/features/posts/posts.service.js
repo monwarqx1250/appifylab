@@ -91,7 +91,8 @@ class PostsService {
           take: 2,
           orderBy: { createdAt: 'desc' },
           include: {
-            author: { select: { id: true, firstName: true, lastName: true } }
+            author: { select: { id: true, firstName: true, lastName: true } },
+            _count: { select: { replies: true } }
           }
         }
       }
@@ -113,11 +114,13 @@ class PostsService {
         comments: post.comments.map(comment => ({
           id: comment.id,
           author: {
+            id: comment.author.id,
             name: `${comment.author.firstName} ${comment.author.lastName}`.trim(),
           },
           content: comment.content,
           timestamp: this.formatTimeAgo(comment.createdAt),
           likes: 0,
+          repliesCount: comment._count?.replies || 0,
         }))
       };
     });
@@ -145,7 +148,8 @@ class PostsService {
           take: 2,
           orderBy: { createdAt: 'desc' },
           include: {
-            author: { select: { id: true, firstName: true, lastName: true } }
+            author: { select: { id: true, firstName: true, lastName: true } },
+            _count: { select: { replies: true } }
           }
         }
       }
@@ -167,11 +171,13 @@ class PostsService {
         comments: post.comments.map(comment => ({
           id: comment.id,
           author: {
+            id: comment.author.id,
             name: `${comment.author.firstName} ${comment.author.lastName}`.trim(),
           },
           content: comment.content,
           timestamp: this.formatTimeAgo(comment.createdAt),
           likes: 0,
+          repliesCount: comment._count?.replies || 0,
         }))
       };
     });

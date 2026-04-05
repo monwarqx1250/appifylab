@@ -128,12 +128,14 @@ const getPostsSchema = {
                 author: {
                   type: 'object',
                   properties: {
+                    id: { type: 'string' },
                     name: { type: 'string' }
                   }
                 },
                 content: { type: 'string' },
                 timestamp: { type: 'string' },
-                likes: { type: 'integer' }
+                likes: { type: 'integer' },
+                repliesCount: { type: 'integer' }
               }
             }
           }

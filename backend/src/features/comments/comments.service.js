@@ -48,8 +48,20 @@ class CommentsService {
 
     const hasMore = skip + comments.length < totalCount;
 
+    const commentsWithRepliesCount = comments.map(comment => ({
+      id: comment.id,
+      author: {
+        id: comment.author.id,
+        name: `${comment.author.firstName} ${comment.author.lastName}`.trim()
+      },
+      content: comment.content,
+      timestamp: '1m',
+      likes: comment._count.likes,
+      repliesCount: comment._count.replies
+    }));
+
     return {
-      comments: comments.reverse(), // oldest first for display
+      comments: commentsWithRepliesCount.reverse(), // oldest first for display
       hasMore,
       totalCount
     };

@@ -17,6 +17,35 @@ const getCommentsSchema = {
     properties: {
       postId: { type: 'string' }
     }
+  },
+  response: {
+    200: {
+      type: 'object',
+      properties: {
+        comments: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              author: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  name: { type: 'string' }
+                }
+              },
+              content: { type: 'string' },
+              timestamp: { type: 'string' },
+              likes: { type: 'number' },
+              repliesCount: { type: 'number' }
+            }
+          }
+        },
+        hasMore: { type: 'boolean' },
+        totalCount: { type: 'number' }
+      }
+    }
   }
 };
 
