@@ -124,4 +124,7 @@ export const likesApi = {
   
   getPostLikers: (postId, page = 1, limit = 20) => 
     api.get(`/posts/${postId}/likers?page=${page}&limit=${limit}`),
+
+  getCommentLikers: (commentId, page = 1, limit = 20) => 
+    api.get(`/comments/${commentId}/likers?page=${page}&limit=${limit}`),
 };

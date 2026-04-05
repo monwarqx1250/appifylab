@@ -48,9 +48,9 @@ export function CommentActions({ onLike, onReply, onShare, timestamp, isLiked })
   );
 }
 
-export function CommentReactions({ isLiked, likesCount }) {
+export function CommentReactions({ isLiked, likesCount, onClick }) {
   return (
-    <div className="_total_reactions">
+    <div className="_total_reactions" onClick={onClick}>
       <div className="_total_react">
         <span className={isLiked ? "_reaction_heart liked" : "_reaction_heart"}>
           {isLiked ? <HeartIcon filled /> : <HeartIcon />}

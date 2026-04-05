@@ -34,7 +34,7 @@ function LikerItem({ user }) {
 	);
 }
 
-export default function LikesModal({ isOpen, onClose, postId }) {
+export default function LikesModal({ isOpen, onClose, postId, commentId }) {
 	const [likers, setLikers] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(true);
@@ -49,7 +49,10 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 		fetchingRef.current = true;
 		
 		try {
-			const result = await likesApi.getPostLikers(postId, pageNum, 20);
+			const result = postId 
+				? await likesApi.getPostLikers(postId, pageNum, 20)
+				: await likesApi.getCommentLikers(commentId, pageNum, 20);
+			
 			if (result.ok) {
 				if (pageNum === 1) {
 					setLikers(result.data.likers);
@@ -65,16 +68,17 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 			setLoading(false);
 			fetchingRef.current = false;
 		}
-	}, [postId, loading]);
+	}, [postId, commentId, loading]);
 
 	useEffect(() => {
-		if (isOpen && postId) {
+		if (isOpen && (postId || commentId)) {
 			setLikers([]);
 			setPage(1);
 			setHasMore(true);
+			fetchingRef.current = false;
 			loadLikers(1);
 		}
-	}, [isOpen, postId]);
+	}, [isOpen, postId, commentId]);
 
 	useEffect(() => {
 		if (!hasMore || loading || !loadMoreRef.current) return;
@@ -92,7 +96,7 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 
 		observer.observe(loadMoreRef.current);
 		return () => observer.disconnect();
-	}, [hasMore, loading, page]);
+	}, [hasMore, loading, page, loadLikers]);
 
 	return (
 		<Modal isOpen={isOpen} onClose={onClose} title={`${totalLikes} Likes`}>
@@ -115,12 +119,6 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 				{loading && (
 					<div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
 						Loading...
-					</div>
-				)}
-				
-				{!hasMore && likers.length > 0 && (
-					<div style={{ padding: '16px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
-						No more likes to load
 					</div>
 				)}
 				

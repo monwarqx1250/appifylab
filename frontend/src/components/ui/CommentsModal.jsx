@@ -167,11 +167,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 						</div>
 					)}
 					
-					{!hasMore && comments.length > 0 && (
-						<div style={{ padding: '16px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
-							No more comments
-						</div>
-					)}
+					<div ref={loadMoreRef} style={{ height: '1px' }} />
 					
 					<div ref={loadMoreRef} style={{ height: '1px' }} />
 				</div>
