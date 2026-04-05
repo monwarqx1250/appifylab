@@ -12,23 +12,33 @@ export function AuthProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (typeof window === 'undefined') {
+      setIsLoading(false);
+      return;
+    }
+    
     const storedToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    console.log('Auth init - storedToken:', storedToken ? 'exists' : 'none');
     if (storedToken) {
       setToken(storedToken);
       setIsAuthenticated(true);
-    }
-    setIsLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (token && isAuthenticated && !user) {
       api.get('/auth/me').then(result => {
+        console.log('Auth /me result:', result);
         if (result.ok && result.data) {
           setUser(result.data);
+          setIsLoading(false);
+        } else {
+          console.log('Auth /me failed, clearing session');
+          localStorage.removeItem(TOKEN_STORAGE_KEY);
+          setToken(null);
+          setIsAuthenticated(false);
+          setIsLoading(false);
         }
       });
+    } else {
+      setIsLoading(false);
     }
-  }, [token, isAuthenticated, user]);
+  }, []);
 
   const login = async (email, password) => {
     const { ok, status, data } = await postAuth('/auth/login', { email, password });

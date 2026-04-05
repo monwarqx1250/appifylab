@@ -10,7 +10,7 @@ module.exports = fp(async function (fastify, opts) {
     try {
       await request.jwtVerify();
     } catch (err) {
-      reply.send(err);
+      reply.code(401).send({ error: 'Unauthorized' });
     }
   });
 });

@@ -3,6 +3,7 @@ const AuthService = require('./auth.service');
 
 module.exports = async function (fastify, opts) {
   const authService = new AuthService(fastify.prisma);
+
   fastify.post('/auth/register', { schema: registerSchema }, async (request, reply) => {
     try {
       const user = await authService.registerUser(request.body);
@@ -32,7 +33,7 @@ module.exports = async function (fastify, opts) {
     }
   });
 
-  fastify.get('/auth/me', async (request, reply) => {
+  fastify.get('/auth/me', { preHandler: [fastify.authenticate] }, async (request, reply) => {
     try {
       const user = await authService.getUserById(request.user.id);
       if (!user) {
