@@ -2,7 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 
-export default function PostCardHeader({ author, timestamp, visibility, onMenuToggle }) {
+export default function PostCardHeader({ author, timestamp, visibility, onMenuToggle, onDelete, isOwner }) {
 	const [menuOpen, setMenuOpen] = useState(false);
 	const menuRef = useRef(null);
 
@@ -100,8 +100,9 @@ export default function PostCardHeader({ author, timestamp, visibility, onMenuTo
 								Edit Post
 							</a>
 						</li>
+						{isOwner && (
 						<li className="_feed_timeline_dropdown_item">
-							<a href="#0" className="_feed_timeline_dropdown_link">
+							<a href="#0" className="_feed_timeline_dropdown_link" onClick={() => onDelete?.()}>
 								<span>
 									<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 18 18">
 										<path stroke="#1890FF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.2" d="M2.25 4.5h13.5M6 4.5V3a1.5 1.5 0 011.5-1.5h3A1.5 1.5 0 0112 3v1.5m2.25 0V15a1.5 1.5 0 01-1.5 1.5h-7.5a1.5 1.5 0 01-1.5-1.5V4.5h10.5zM7.5 8.25v4.5M10.5 8.25v4.5" />
@@ -110,6 +111,7 @@ export default function PostCardHeader({ author, timestamp, visibility, onMenuTo
 								Delete Post
 							</a>
 						</li>
+						)}
 					</ul>
 				</div>
 			</div>

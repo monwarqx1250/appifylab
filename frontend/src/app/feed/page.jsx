@@ -295,6 +295,7 @@ export default function FeedPage() {
 														onLikeComment={handleLikeComment}
 														onReplyComment={handleReplyComment}
 														onShareComment={handleShareComment}
+														onDeletePost={(postId) => setPosts(prev => prev.filter(p => p.id !== postId))}
 													/>
 												))
 											)}

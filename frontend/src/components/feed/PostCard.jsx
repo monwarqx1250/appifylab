@@ -8,6 +8,8 @@ import PostActionBar from './PostActionBar';
 import CommentThread from './CommentThread';
 import LikesModal from '@/components/ui/LikesModal';
 import CommentsModal from '@/components/ui/CommentsModal';
+import DeleteConfirmModal from '@/components/ui/DeleteConfirmModal';
+import { postsApi } from '@/lib/api';
 
 export default function PostCard({
 	post,
@@ -20,14 +22,28 @@ export default function PostCard({
 	onLoadPreviousComments,
 	onLikeComment,
 	onReplyComment,
-	onShareComment
+	onShareComment,
+	onDeletePost
 }) {
 	const [showLikesModal, setShowLikesModal] = useState(false);
 	const [showCommentsModal, setShowCommentsModal] = useState(false);
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
+	const [deleting, setDeleting] = useState(false);
 
 	// Show latest 2 comments inline
 	const latestComments = post?.comments?.slice(0, 2) || [];
 	const totalComments = post?.commentCount || 0;
+	const isOwner = currentUser?.id === post?.author?.id;
+
+	const handleDelete = async () => {
+		setDeleting(true);
+		const result = await postsApi.delete(post?.id);
+		if (result.ok) {
+			setShowDeleteModal(false);
+			onDeletePost?.(post?.id);
+		}
+		setDeleting(false);
+	};
 
 	return (
 		<>
@@ -38,6 +54,8 @@ export default function PostCard({
 						timestamp={post?.timestamp}
 						visibility={post?.visibility}
 						onMenuToggle={onMenuToggle}
+						isOwner={isOwner}
+						onDelete={() => setShowDeleteModal(true)}
 					/>
 					<PostCardMedia
 						title={post?.title}
@@ -83,6 +101,12 @@ export default function PostCard({
 				postId={post?.id}
 				currentUser={currentUser}
 				onAddComment={() => onAddComment?.(null, post?.id)}
+			/>
+			<DeleteConfirmModal
+				isOpen={showDeleteModal}
+				onClose={() => setShowDeleteModal(false)}
+				onConfirm={handleDelete}
+				loading={deleting}
 			/>
 		</>
 	);
