@@ -28,22 +28,6 @@ export default function PostReactionSummary({ reactions, commentCount, shareCoun
 					</div>
 				)}
 				<div className="_feed_inner_timeline_total_reacts_txt">
-					{likesCount > 0 && (
-						<p 
-							className="_feed_inner_timeline_total_reacts_para1" 
-							style={{ marginBottom: '4px', cursor: 'pointer' }}
-							onClick={onLikesClick}
-						>
-							{likedBy.length > 0 ? (
-								<span>
-									{likedBy.slice(0, 2).map(l => l.name).join(', ')}
-									{likedBy.length > 2 && ` and ${likedBy.length - 2} others`}
-								</span>
-							) : (
-								<span>{likesCount} like{likesCount !== 1 ? 's' : ''}</span>
-							)}
-						</p>
-					)}
 					<p className="_feed_inner_timeline_total_reacts_para1">
 						<span>{commentCount || 0}</span> Comment{commentCount !== 1 ? 's' : ''}
 					</p>

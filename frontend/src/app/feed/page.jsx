@@ -173,6 +173,7 @@ export default function FeedPage() {
 	}, []);
 
 	const handleLikeComment = useCallback(async (commentId, postId) => {
+		console.log(`liking comment comment id: ${commentId}`)
 		await likeComment(commentId);
 	}, [likeComment]);
 

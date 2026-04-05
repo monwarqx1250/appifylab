@@ -135,6 +135,7 @@ const getPostsSchema = {
                 content: { type: 'string' },
                 timestamp: { type: 'string' },
                 likes: { type: 'integer' },
+                isLiked: { type: 'boolean' },
                 repliesCount: { type: 'integer' }
               }
             }

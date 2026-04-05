@@ -7,9 +7,17 @@ import { HeartIcon } from '../icons/HeartIcon';
 
 export default function CommentItem({ comment, currentUser, onLike, onReply, onShare }) {
 	const [showReplyBox, setShowReplyBox] = useState(false);
+	const [isLiked, setIsLiked] = useState(comment?.isLiked || false);
+	const [likesCount, setLikesCount] = useState(comment?.likes || 0);
 
 	const handleReplyClick = () => {
 		setShowReplyBox(!showReplyBox);
+	};
+
+	const handleLike = () => {
+		setIsLiked(!isLiked);
+		setLikesCount(prev => isLiked ? prev - 1 : prev + 1);
+		onLike?.(comment?.id);
 	};
 
 	return (
@@ -40,7 +48,7 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 					<div className="_comment_reply" style={{minWidth: 250}}>
 						<div className="_comment_reply_num">
 							<ul className="_comment_reply_list">
-								<li><span onClick={onLike}>Like.</span></li>
+								<li><span onClick={handleLike}>{isLiked ? 'Liked' : 'Like'}.</span></li>
 								<li><span onClick={handleReplyClick}>Reply.</span></li>
 								<li><span onClick={onShare}>Share</span></li>
 								<li><span className="_time_link">.{comment?.timestamp || '1m'}</span></li>
@@ -50,11 +58,11 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 
 					<div className="_total_reactions">
 						<div className="_total_react">
-							<span className="_reaction_heart">
-								<HeartIcon />
+							<span className={isLiked ? "_reaction_heart liked" : "_reaction_heart"}>
+								{isLiked ? <HeartIcon filled /> : <HeartIcon />}
 							</span>
 						</div>
-						<span className="_total">{comment?.likes || 0}</span>
+						<span className="_total">{likesCount}</span>
 					</div>
 				</div>
 				{showReplyBox && (

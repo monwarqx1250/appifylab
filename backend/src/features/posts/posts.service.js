@@ -92,7 +92,11 @@ class PostsService {
           orderBy: { createdAt: 'desc' },
           include: {
             author: { select: { id: true, firstName: true, lastName: true } },
-            _count: { select: { replies: true } }
+            _count: { select: { replies: true, likes: true } },
+            likes: {
+              where: { userId },
+              select: { id: true }
+            }
           }
         }
       }
@@ -119,7 +123,8 @@ class PostsService {
           },
           content: comment.content,
           timestamp: this.formatTimeAgo(comment.createdAt),
-          likes: 0,
+          likes: comment._count?.likes || 0,
+          isLiked: comment.likes.length > 0,
           repliesCount: comment._count?.replies || 0,
         }))
       };
@@ -149,7 +154,11 @@ class PostsService {
           orderBy: { createdAt: 'desc' },
           include: {
             author: { select: { id: true, firstName: true, lastName: true } },
-            _count: { select: { replies: true } }
+            _count: { select: { replies: true, likes: true } },
+            likes: {
+              where: { userId },
+              select: { id: true }
+            }
           }
         }
       }
@@ -176,7 +185,8 @@ class PostsService {
           },
           content: comment.content,
           timestamp: this.formatTimeAgo(comment.createdAt),
-          likes: 0,
+          likes: comment._count?.likes || 0,
+          isLiked: comment.likes.length > 0,
           repliesCount: comment._count?.replies || 0,
         }))
       };

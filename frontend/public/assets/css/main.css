@@ -5964,6 +5964,12 @@
 ._reaction_heart svg path {
     stroke:red;
 }
+._reaction_heart.liked {
+    color: red;
+}
+._reaction_heart.liked svg path {
+    fill: red;
+}
 ._total {
     font-size: 14px;
     margin: 3px 0 0 4px;
