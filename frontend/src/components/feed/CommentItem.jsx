@@ -19,32 +19,25 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 					<img src={comment?.author?.avatar || "assets/images/txt_img.png"} alt="" className="_comment_img1" />
 				</a>
 			</div>
+
 			<div className="_comment_area">
 				<div className="_comment_details">
+
 					<div className="_comment_details_top">
 						<div className="_comment_name">
-							<a href="profile.html">
+							<a href="#">
 								<h4 className="_comment_name_title">{comment?.author?.name || 'Unknown'}</h4>
 							</a>
 						</div>
 					</div>
+
 					<div className="_comment_status">
 						<p className="_comment_status_text">
 							<span>{comment?.content || 'No content'}</span>
 						</p>
 					</div>
-				<div className="_total_reactions">
-					<div className="_total_react">
-						<span className="_reaction_like">
-							<LikeIcon />
-						</span>
-						<span className="_reaction_heart">
-							<HeartIcon />
-						</span>
-					</div>
-					<span className="_total">{comment?.likes || 0}</span>
-				</div>
-					<div className="_comment_reply">
+
+					<div className="_comment_reply" style={{minWidth: 250}}>
 						<div className="_comment_reply_num">
 							<ul className="_comment_reply_list">
 								<li><span onClick={onLike}>Like.</span></li>
@@ -54,10 +47,19 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 							</ul>
 						</div>
 					</div>
+
+					<div className="_total_reactions">
+						<div className="_total_react">
+							<span className="_reaction_heart">
+								<HeartIcon />
+							</span>
+						</div>
+						<span className="_total">{comment?.likes || 0}</span>
+					</div>
 				</div>
 				{showReplyBox && (
-					<CommentComposer 
-						currentUser={currentUser} 
+					<CommentComposer
+						currentUser={currentUser}
 						placeholder="Write a reply"
 						textareaId={`reply-${comment?.id || 'default'}`}
 						onSubmit={(content) => {

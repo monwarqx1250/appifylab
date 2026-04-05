@@ -10,13 +10,13 @@ function CommentItem({ comment, currentUser, onLike, onReply }) {
 
 	return (
 		<div className="_comment_main" style={{ padding: '12px 0', borderBottom: '1px solid #f0f0f0' }}>
-			<div className="_comment_image" style={{ float: 'left', marginRight: '10px' }}>
+			<div className="_comment_image" style={{ float: 'left'}}>
 				<a href="profile.html" className="_comment_image_link">
 					<img src={comment?.author?.avatar || "assets/images/txt_img.png"} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%' }} />
 				</a>
 			</div>
-			<div className="_comment_area">
-				<div className="_comment_details">
+			<div className="_comment_area" style={{marginLeft:12}}>
+				<div className="_comment_details" style={{margin: 0}}>
 					<div className="_comment_name">
 						<a href="profile.html">
 							<h4 className="_comment_name_title" style={{ fontSize: '13px', fontWeight: '600', margin: 0 }}>
@@ -126,7 +126,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 
 	return (
 		<Modal isOpen={isOpen} onClose={onClose} title="Comments" maxWidth="500px">
-			<div style={{ maxHeight: '60vh', display: 'flex', flexDirection: 'column' }}>
+			<div style={{ maxHeight: '60vh', display: 'flex', flexDirection: 'column', padding : '14px' }}>
 				<div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e5e5' }}>
 					<CommentComposer
 						currentUser={currentUser}
@@ -137,7 +137,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 					/>
 				</div>
 				
-				<div style={{ flex: 1, overflowY: 'auto', padding: '0 16px' }}>
+				<div style={{ flex: 1, overflowY: 'auto', padding: '0 6px' }} className='boom'>
 					{loading ? (
 						<div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
 							Loading comments...
