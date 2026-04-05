@@ -15,7 +15,7 @@ export default function CommentThread({
 	onShareComment
 }) {
 	const [showPrevious, setShowPrevious] = useState(false);
-
+	
 	const handleLoadPrevious = () => {
 		setShowPrevious(true);
 		onLoadPrevious?.();
