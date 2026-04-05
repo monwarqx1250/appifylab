@@ -36,6 +36,7 @@ export default function FeedPage() {
 	const fetchPosts = async () => {
 		setPostsLoading(true);
 		const result = await postsApi.getAll();
+		console.log(result)
 		if (result.ok) {
 			setPosts(result.data);
 		}
@@ -210,39 +211,6 @@ export default function FeedPage() {
 		return null;
 	}
 
-	const samplePost = {
-		author: {
-			name: 'Karim Saif',
-			avatar: 'assets/images/post_img.png',
-		},
-		timestamp: '5 minute ago',
-		visibility: 'Public',
-		title: '-Healthy Tracking App',
-		image: 'assets/images/timeline_img.png',
-		reactions: [
-			{ image: 'assets/images/react_img1.png' },
-			{ image: 'assets/images/react_img2.png' },
-			{ image: 'assets/images/react_img3.png' },
-			{ image: 'assets/images/react_img4.png' },
-			{ image: 'assets/images/react_img5.png' },
-		],
-		commentCount: 12,
-		shareCount: 122,
-		previousCommentsCount: 4,
-		comments: [
-			{
-				id: 1,
-				author: {
-					name: 'Radovan SkillArena',
-					avatar: 'assets/images/txt_img.png',
-				},
-				content: 'It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.',
-				likes: 198,
-				timestamp: '21m',
-			},
-		],
-	};
-
 	const currentUser = user ? {
 		id: user.id,
 		firstName: user.firstName,
@@ -251,6 +219,7 @@ export default function FeedPage() {
 		avatar: 'assets/images/comment_img.png',
 	} : null;
 
+	console.log('current user',currentUser) // can see null sometimes. need to be fixed
 	return (
 		<>
 

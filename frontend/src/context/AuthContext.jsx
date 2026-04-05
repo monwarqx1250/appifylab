@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { postAuth, persistAuthSession, TOKEN_STORAGE_KEY } from '@/lib/auth';
+import { postAuth, api, persistAuthSession, TOKEN_STORAGE_KEY } from '@/lib/api';
 
 const AuthContext = createContext(null);
 
@@ -19,6 +19,16 @@ export function AuthProvider({ children }) {
     }
     setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    if (token && isAuthenticated && !user) {
+      api.get('/auth/me').then(result => {
+        if (result.ok && result.data) {
+          setUser(result.data);
+        }
+      });
+    }
+  }, [token, isAuthenticated, user]);
 
   const login = async (email, password) => {
     const { ok, status, data } = await postAuth('/auth/login', { email, password });

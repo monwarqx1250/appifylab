@@ -31,4 +31,17 @@ module.exports = async function (fastify, opts) {
       }
     }
   });
+
+  fastify.get('/auth/me', async (request, reply) => {
+    try {
+      const user = await authService.getUserById(request.user.id);
+      if (!user) {
+        return reply.code(404).send({ error: 'User not found' });
+      }
+      reply.code(200).send(user);
+    } catch (err) {
+      fastify.log.error(err);
+      reply.code(500).send({ error: 'Internal Server Error' });
+    }
+  });
 };

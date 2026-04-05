@@ -1,4 +1,6 @@
-import { TOKEN_STORAGE_KEY } from './auth';
+import { TOKEN_STORAGE_KEY, persistAuthSession } from './auth';
+export { TOKEN_STORAGE_KEY, persistAuthSession } from './auth';
+export { postAuth } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
