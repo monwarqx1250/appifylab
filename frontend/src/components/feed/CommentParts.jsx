@@ -61,13 +61,13 @@ export function CommentReactions({ isLiked, likesCount }) {
   );
 }
 
-export function RepliesLink({ count, onClick, loading }) {
+export function RepliesLink({ count, onClick, loading, showReplies }) {
   if (count <= 0) return null;
   
   return (
-    <div className="_replies_link">
+    <div className="_replies_link" style={{marginLeft: 25}}>
       <span onClick={onClick} className="_replies_text">
-        {loading ? 'Loading...' : `Show ${count} ${count === 1 ? 'reply' : 'replies'}`}
+        {loading ? 'Loading...' : `${showReplies ? 'Hide' : 'Show'} ${count} ${count === 1 ? 'reply' : 'replies'}`}
       </span>
     </div>
   );

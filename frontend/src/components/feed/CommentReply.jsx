@@ -51,7 +51,8 @@ export default function CommentReply({
       <RepliesLink 
         count={repliesCount} 
         onClick={handleShowReplies} 
-        loading={loadingReplies} 
+        loading={loadingReplies}
+        showReplies={showReplies}
       />
 
       {showReplies && (
@@ -68,7 +69,6 @@ export default function CommentReply({
             />
           ))}
           {hasMore && <LoadMoreReplies onClick={handleLoadMoreReplies} />}
-          {repliesCount > 0 && <HideRepliesLink onClick={() => setShowReplies(false)} />}
         </div>
       )}
     </>

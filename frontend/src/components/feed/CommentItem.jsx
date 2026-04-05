@@ -33,15 +33,15 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 				<div className="_comment_details">
 					<CommentHeader name={comment?.author?.name} />
 					<CommentContent content={comment?.content} />
-					<CommentActions 
-						onLike={handleLike} 
-						onReply={handleReplyClick} 
-						onShare={onShare} 
+					<CommentActions
+						onLike={handleLike}
+						onReply={handleReplyClick}
+						onShare={onShare}
 						timestamp={comment?.timestamp}
 						isLiked={isLiked}
 					/>
 					<CommentReactions isLiked={isLiked} likesCount={likesCount} />
-
+				</div>
 					<CommentReply
 						commentId={comment?.id}
 						repliesCount={repliesCount}
@@ -51,7 +51,6 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 						onShare={onShare}
 						depth={depth}
 					/>
-				</div>
 				{showReplyBox && (
 					<CommentComposer
 						currentUser={currentUser}
