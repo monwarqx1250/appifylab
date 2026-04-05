@@ -6,18 +6,18 @@ import LikesModal from '@/components/ui/LikesModal';
 export default function PostReactionSummary({ reactions, commentCount, shareCount, likesCount, likedBy = [], postId, onLikesClick }) {
 	return (
 		<>
-			<div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26">
-				{likesCount > 0 && (
-					<div 
+			<div className="_feed_inner_timeline_total_reacts _padd_r24 _padd_l24 _mar_b26" >
+				{(
+					<div
 						className="_feed_inner_timeline_total_reacts_image"
 						onClick={onLikesClick}
-						style={{ cursor: 'pointer' }}
+						style={{ cursor: 'pointer', minHeight: 35 }}
 					>
 						{likedBy.slice(0, 3).map((liker, index) => (
-							<img 
+							<img
 								key={liker.id || index}
-								src="assets/images/react_img1.png" 
-								alt={liker.name} 
+								src="assets/images/react_img1.png"
+								alt={liker.name}
 								className={index === 0 ? "_react_img1" : "_react_img"}
 								title={liker.name}
 							/>

@@ -44,14 +44,14 @@ export default function CommentThread({
 					onShare={() => onShareComment?.(comment.id)}
 				/>
 			))}
-			<div style={{padding: '25px 0'}}>
-				<CommentComposer
-					currentUser={currentUser}
-					placeholder="Write a comment"
-					textareaId="main-comment"
-					onSubmit={onAddComment}
-				/>
-			</div>
+
+			<CommentComposer
+				currentUser={currentUser}
+				placeholder="Write a comment"
+				textareaId="main-comment"
+				onSubmit={onAddComment}
+			/>
+
 		</div>
 	);
 }
