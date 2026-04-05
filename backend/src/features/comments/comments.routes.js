@@ -17,10 +17,11 @@ module.exports = async function (fastify, opts) {
   });
 
   // Get initial comments (paginated - for embedding in posts)
-  fastify.get('/posts/:postId/comments', { schema: getCommentsSchema }, async (request, reply) => {
+  fastify.get('/posts/:postId/comments', async (request, reply) => {
     try {
       const { postId } = request.params;
-      const { page = 1, limit = 3 } = request.query;
+      const page = parseInt(request.query.page) || 1;
+      const limit = parseInt(request.query.limit) || 3;
       const result = await commentsService.getCommentsByPostId(postId, request.user.id, page, limit, false);
       reply.code(200).send(result);
     } catch (err) {
@@ -42,10 +43,11 @@ module.exports = async function (fastify, opts) {
   });
 
   // Get replies for a specific comment
-  fastify.get('/comments/:commentId/replies', { schema: getRepliesSchema }, async (request, reply) => {
+  fastify.get('/comments/:commentId/replies', async (request, reply) => {
     try {
       const { commentId } = request.params;
-      const { page = 1, limit = 10 } = request.query;
+      const page = parseInt(request.query.page) || 1;
+      const limit = parseInt(request.query.limit) || 10;
       const result = await commentsService.getReplies(commentId, request.user.id, page, limit);
       reply.code(200).send(result);
     } catch (err) {
