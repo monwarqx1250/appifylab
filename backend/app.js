@@ -8,6 +8,7 @@ const fastifyStatic = require('@fastify/static');
 module.exports = async function (fastify, opts) {
   await fastify.register(cors, {
     origin: '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
 
   fastify.register(require('@fastify/multipart'))

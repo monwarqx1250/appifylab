@@ -2,10 +2,10 @@ import { TOKEN_STORAGE_KEY } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
-async function getHeaders() {
+async function getHeaders(options = {}) {
   const token = localStorage.getItem(TOKEN_STORAGE_KEY);
   return {
-    'Content-Type': 'application/json',
+    ...(options.method !== 'DELETE' && { 'Content-Type': 'application/json' }),
     ...(token && { Authorization: `Bearer ${token}` }),
   };
 }
@@ -16,7 +16,7 @@ async function request(endpoint, options = {}) {
   const config = {
     ...options,
     headers: {
-      ...(await getHeaders()),
+      ...(await getHeaders(options)),
       ...options.headers,
     },
   };
