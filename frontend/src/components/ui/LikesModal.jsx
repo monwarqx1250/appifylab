@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { likesApi } from '@/lib/api';
 import Modal from './Modal';
 
@@ -40,10 +40,13 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 	const [hasMore, setHasMore] = useState(true);
 	const [page, setPage] = useState(1);
 	const [totalLikes, setTotalLikes] = useState(0);
+	const loadMoreRef = useRef(null);
+	const fetchingRef = useRef(false);
 
 	const loadLikers = useCallback(async (pageNum) => {
-		if (loading) return;
+		if (loading || fetchingRef.current) return;
 		setLoading(true);
+		fetchingRef.current = true;
 		
 		try {
 			const result = await likesApi.getPostLikers(postId, pageNum, 20);
@@ -60,6 +63,7 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 			console.error('Failed to load likers:', error);
 		} finally {
 			setLoading(false);
+			fetchingRef.current = false;
 		}
 	}, [postId, loading]);
 
@@ -72,19 +76,27 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 		}
 	}, [isOpen, postId]);
 
-	const handleScroll = (e) => {
-		const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-		if (scrollHeight - scrollTop - clientHeight < 100 && hasMore && !loading) {
-			const nextPage = page + 1;
-			setPage(nextPage);
-			loadLikers(nextPage);
-		}
-	};
+	useEffect(() => {
+		if (!hasMore || loading || !loadMoreRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && !fetchingRef.current) {
+					const nextPage = page + 1;
+					setPage(nextPage);
+					loadLikers(nextPage);
+				}
+			},
+			{ rootMargin: '100px' }
+		);
+
+		observer.observe(loadMoreRef.current);
+		return () => observer.disconnect();
+	}, [hasMore, loading, page]);
 
 	return (
 		<Modal isOpen={isOpen} onClose={onClose} title={`${totalLikes} Likes`}>
 			<div 
-				onScroll={handleScroll}
 				style={{
 					maxHeight: '60vh',
 					overflowY: 'auto',
@@ -111,6 +123,8 @@ export default function LikesModal({ isOpen, onClose, postId }) {
 						No more likes to load
 					</div>
 				)}
+				
+				<div ref={loadMoreRef} style={{ height: '1px' }} />
 			</div>
 		</Modal>
 	);

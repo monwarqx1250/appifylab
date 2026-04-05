@@ -96,7 +96,7 @@ class CommentsService {
     }));
 
     return {
-      comments: commentsWithRepliesCount.reverse(),
+      comments: commentsWithRepliesCount,
       hasMore,
       totalCount
     };

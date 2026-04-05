@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { commentsApi } from '@/lib/api';
 import Modal from './Modal';
 import CommentComposer from '@/components/feed/CommentComposer';
@@ -10,15 +10,23 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
+	const [page, setPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
+	const loadMoreRef = useRef(null);
+	const fetchingRef = useRef(false);
 
-	const loadComments = useCallback(async () => {
-		if (!postId) return;
+	const loadComments = useCallback(async (pageNum = 1) => {
+		if (fetchingRef.current) return;
+		fetchingRef.current = true;
 		setLoading(true);
+		console.log('Loading page:', pageNum);
 		
 		try {
-			const result = await commentsApi.getByPostId(postId, 1, 50);
+			const result = await commentsApi.getByPostId(postId, pageNum, 20);
+			console.log('API result:', result.ok, result.data);
 			if (result.ok && result.data) {
 				const commentsArray = Array.isArray(result.data) ? result.data : (result.data.comments || []);
+				console.log('Comments array:', commentsArray.length);
 				const transformed = commentsArray.map(c => ({
 					id: c.id,
 					author: {
@@ -31,20 +39,51 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 					timestamp: c.timestamp || '1m',
 					repliesCount: c.repliesCount || 0
 				}));
-				setComments(transformed);
+				
+				if (pageNum === 1) {
+					setComments(transformed);
+				} else {
+					setComments(prev => [...prev, ...transformed]);
+				}
+				setHasMore(result.data.hasMore !== false);
+				setPage(pageNum);
 			}
 		} catch (error) {
 			console.error('Failed to load comments:', error);
 		} finally {
 			setLoading(false);
+			fetchingRef.current = false;
 		}
 	}, [postId]);
 
 	useEffect(() => {
 		if (isOpen && postId) {
-			loadComments();
+			fetchingRef.current = false;
+			setComments([]);
+			setPage(1);
+			setHasMore(true);
+			setLoading(false);
+			loadComments(1);
 		}
 	}, [isOpen, postId, loadComments]);
+
+	useEffect(() => {
+		console.log('Observer effect:', hasMore, loading, !!loadMoreRef.current);
+		if (!hasMore || loading || !loadMoreRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				console.log('Observer triggered:', entries[0].isIntersecting, fetchingRef.current);
+				if (entries[0].isIntersecting && !fetchingRef.current) {
+					loadComments(page + 1);
+				}
+			},
+			{ rootMargin: '100px' }
+		);
+
+		observer.observe(loadMoreRef.current);
+		return () => observer.disconnect();
+	}, [hasMore, loading, page, loadComments]);
 
 	const handleAddComment = async (content) => {
 		if (!content?.trim() || !postId) return;
@@ -121,6 +160,20 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 							/>
 						))
 					)}
+					
+					{loading && (
+						<div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+							Loading more...
+						</div>
+					)}
+					
+					{!hasMore && comments.length > 0 && (
+						<div style={{ padding: '16px', textAlign: 'center', color: '#999', fontSize: '12px' }}>
+							No more comments
+						</div>
+					)}
+					
+					<div ref={loadMoreRef} style={{ height: '1px' }} />
 				</div>
 			</div>
 		</Modal>
