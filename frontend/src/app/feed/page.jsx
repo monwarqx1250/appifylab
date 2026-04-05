@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import StoryCarousel from '@/components/feed/StoryCarousel';
 import StoryCarouselMobile from '@/components/feed/StoryCarouselMobile';
@@ -25,17 +25,43 @@ export default function FeedPage() {
 	const [isDarkMode, setIsDarkMode] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const [postsLoading, setPostsLoading] = useState(true);
+	const [page, setPage] = useState(1);
+	const [hasMore, setHasMore] = useState(true);
+	const [loadingMore, setLoadingMore] = useState(false);
+	const loadMoreRef = useRef(null);
+	const fetchingRef = useRef(false);
 
 	const { likePost, likeComment, loading: likeLoading } = useLike();
 	const { fetchComments, addComment, replyToComment, loading: commentLoading } = useComments();
 
-	const fetchPosts = async () => {
-		setPostsLoading(true);
-		const result = await postsApi.getAll();
-		if (result.ok) {
-			setPosts(result.data.map(transformPost));
+	const fetchPosts = async (pageNum = 1) => {
+		if (pageNum === 1) {
+			setPostsLoading(true);
+		} else {
+			setLoadingMore(true);
 		}
-		setPostsLoading(false);
+		
+		const result = await postsApi.getAll(pageNum);
+		if (result.ok) {
+			const transformed = result.data.map(transformPost);
+			if (pageNum === 1) {
+				setPosts(transformed);
+			} else {
+				setPosts(prev => {
+					const existingIds = new Set(prev.map(p => p.id));
+					const newPosts = transformed.filter(p => !existingIds.has(p.id));
+					return [...prev, ...newPosts];
+				});
+			}
+			setHasMore(transformed.length > 0);
+		}
+		
+		if (pageNum === 1) {
+			setPostsLoading(false);
+		} else {
+			setLoadingMore(false);
+			fetchingRef.current = false;
+		}
 	};
 
 	useEffect(() => {
@@ -46,9 +72,33 @@ export default function FeedPage() {
 
 	useEffect(() => {
 		if (isAuthenticated) {
-			fetchPosts();
+			fetchPosts(1);
 		}
 	}, [isAuthenticated]);
+
+	useEffect(() => {
+		if (!hasMore || loadingMore || postsLoading || fetchingRef.current) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && !fetchingRef.current) {
+					fetchingRef.current = true;
+					setPage(prev => {
+						const nextPage = prev + 1;
+						fetchPosts(nextPage);
+						return nextPage;
+					});
+				}
+			},
+			{ rootMargin: '200px' }
+		);
+
+		if (loadMoreRef.current) {
+			observer.observe(loadMoreRef.current);
+		}
+
+		return () => observer.disconnect();
+	}, [hasMore, loadingMore, postsLoading]);
 
 	const handlePostCreated = useCallback((newPost) => {
 		console.log('handlePostCreated - raw:', newPost);
@@ -206,6 +256,13 @@ export default function FeedPage() {
 													/>
 												))
 											)}
+											{loadingMore && (
+												<p style={{ textAlign: 'center', padding: '20px' }}>Loading more posts...</p>
+											)}
+											{!hasMore && posts.length > 0 && (
+												<p style={{ textAlign: 'center', padding: '20px', color: '#666' }}>No more posts</p>
+											)}
+											<div ref={loadMoreRef} style={{ height: '1px' }} />
 										</div>
 									</div>
 								</div>
