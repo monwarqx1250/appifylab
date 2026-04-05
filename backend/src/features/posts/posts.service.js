@@ -1,4 +1,7 @@
 const UPLOAD_BASE_URL = process.env.UPLOAD_BASE_URL || '/uploads';
+const SITE_URL = process.env.SITE_URL || 'http://localhost:3001';
+
+const formatUrl = (path) => path.startsWith('http') ? path : `${SITE_URL}${path}`;
 
 class PostsService {
   constructor(prisma, userId = null) {
@@ -6,8 +9,8 @@ class PostsService {
     this.userId = userId;
   }
 
-  formatAttachmentUrl(filename) {
-    return `${UPLOAD_BASE_URL}/${filename}`;
+  formatAttachmentUrl(fileUrl) {
+    return formatUrl(`${UPLOAD_BASE_URL}/${fileUrl}`);
   }
 
   formatTimeAgo(date) {
