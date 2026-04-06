@@ -1,0 +1,16 @@
+node_modules
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+README.md
+*.md
+coverage
+.nyc_output
+*.log
+*.db
+uploads
+prisma/dev.db
+prisma/dev.db-journal
+.DS_Store

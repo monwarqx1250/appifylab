@@ -2,8 +2,10 @@ require('dotenv').config();
 const Fastify = require('fastify');
 const appService = require('./app');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const fastify = Fastify({
-  logger: {
+  logger: isProduction ? true : {
     transport : {
       target: 'pino-pretty',
       options: {
