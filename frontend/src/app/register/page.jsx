@@ -1,11 +1,93 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import AuthForm from '@/components/auth/AuthForm';
 import { persistAuthSession, postAuth } from '@/lib/auth';
 import { ToastProvider, useToast } from '@/components/ui/Toast';
+
+const PASSWORD_REQUIREMENTS = [
+  { regex: /.{8,}/, label: 'At least 8 characters' },
+  { regex: /[a-z]/, label: 'One lowercase letter' },
+  { regex: /[A-Z]/, label: 'One uppercase letter' },
+  { regex: /\d/, label: 'One number' },
+];
+
+function getPasswordStrength(password) {
+  if (!password) return { score: 0, label: '', color: '' };
+  let score = 0;
+  PASSWORD_REQUIREMENTS.forEach((req) => {
+    if (req.regex.test(password)) score++;
+  });
+  const levels = [
+    { score: 0, label: 'Very Weak', color: '#dc3545' },
+    { score: 1, label: 'Weak', color: '#dc3545' },
+    { score: 2, label: 'Fair', color: '#ffc107' },
+    { score: 3, label: 'Good', color: '#20c997' },
+    { score: 4, label: 'Strong', color: '#198754' },
+  ];
+  return levels[score] || levels[0];
+}
+
+function PasswordStrengthBar({ password }) {
+  const { score, label, color } = useMemo(() => getPasswordStrength(password), [password]);
+  
+  if (!password) return null;
+  
+  return (
+    <div className="row">
+      <div className="col-12">
+        <div style={{ marginTop: '-10px', marginBottom: '14px' }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                style={{
+                  flex: 1,
+                  height: '4px',
+                  borderRadius: '2px',
+                  backgroundColor: i <= score ? color : '#e9ecef',
+                  transition: 'background-color 0.2s ease',
+                }}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '0.75rem', color: color }}>{label}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PasswordHelpText({ password }) {
+  const satisfied = useMemo(() => {
+    if (!password) return [];
+    return PASSWORD_REQUIREMENTS.filter((req) => req.regex.test(password)).map((req) => req.label);
+  }, [password]);
+
+  return (
+    <div className="row">
+      <div className="col-12">
+        {password && (
+          <div style={{ marginTop: '-10px', marginBottom: '14px' }}>
+            <ul style={{ marginTop: '8px', marginBottom: 0, paddingLeft: '16px', fontSize: '0.75rem', color: '#6c757d' }}>
+              {PASSWORD_REQUIREMENTS.map((req, i) => {
+                const isSatisfied = req.regex.test(password || '');
+                return (
+                  <li key={i} style={{ color: isSatisfied ? '#198754' : '#6c757d', marginBottom: '2px' }}>
+                    {isSatisfied && <span style={{ marginRight: '4px' }}>✓</span>}
+                    {req.label}
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 const REGISTER_FIELDS = [
   { name: 'firstName', type: 'text', label: 'First Name', autoComplete: 'given-name' },
@@ -112,6 +194,14 @@ function RegisterContent() {
                   submitLabel="Register now"
                   beforeSubmit={beforeSubmit}
                   onSubmit={handleRegister}
+                  fieldAfter={{
+                    password: (value) => (
+                      <>
+                        <PasswordHelpText password={value} />
+                        <PasswordStrengthBar password={value} />
+                      </>
+                    ),
+                  }}
                   validate={(v) => {
                     const { firstName, lastName, email, password, confirm_password, terms } = v;
                     if (!firstName?.trim()) return false;

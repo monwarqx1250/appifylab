@@ -43,6 +43,7 @@ function gatherFormValues(formEl) {
  * @param {React.ReactNode} [props.beforeSubmit]
  * @param {(values: Record<string, string>) => Promise<{ error?: string } | void>} props.onSubmit
  * @param {(values: Record<string, string>) => boolean} [props.validate]
+ * @param {Record<string, React.ReactNode>} [props.fieldAfter]
  */
 export default function AuthForm({
   variant,
@@ -51,6 +52,7 @@ export default function AuthForm({
   beforeSubmit = null,
   onSubmit,
   validate,
+  fieldAfter = {},
 }) {
   const c = VARIANT_CLASSES[variant] || VARIANT_CLASSES.registration;
   const formRef = useRef(null);
@@ -136,6 +138,7 @@ export default function AuthForm({
               </div>
             </div>
           )}
+          {fieldAfter[f.name]?.(values[f.name])}
         </React.Fragment>
       ))}
 
