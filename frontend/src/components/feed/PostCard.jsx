@@ -101,6 +101,7 @@ export default function PostCard({
 				postId={post?.id}
 				currentUser={currentUser}
 				onAddComment={() => onAddComment?.(null, post?.id)}
+				onReplyComment={() => onReplyComment?.(null, null, post?.id)}
 			/>
 			<DeleteConfirmModal
 				isOpen={showDeleteModal}

@@ -46,6 +46,7 @@ export function transformComment(comment) {
     isLiked: comment.isLiked || false,
     timestamp: comment.timestamp || '1m',
     repliesCount: comment.repliesCount || 0,
+    replies: comment.replies || [],
   };
 }
 

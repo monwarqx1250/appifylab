@@ -116,6 +116,9 @@ export const commentsApi = {
     api.get(`/comments/${commentId}/replies?page=${page}&limit=${limit}`),
   
   create: (data) => api.post('/comments', data),
+
+  replyToComment: (postId, content, parentId) => 
+    api.post('/comments', { postId, content, parentId }),
 };
 
 export const likesApi = {

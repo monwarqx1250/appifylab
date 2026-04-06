@@ -6,7 +6,7 @@ import Modal from './Modal';
 import CommentComposer from '@/components/feed/CommentComposer';
 import CommentItem from '@/components/feed/CommentItem';
 
-export default function CommentsModal({ isOpen, onClose, postId, currentUser, onAddComment }) {
+export default function CommentsModal({ isOpen, onClose, postId, currentUser, onAddComment, onReplyComment }) {
 	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
@@ -37,7 +37,8 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 					likes: c.likes || 0,
 					isLiked: c.isLiked || false,
 					timestamp: c.timestamp || '1m',
-					repliesCount: c.repliesCount || 0
+					repliesCount: c.repliesCount || 0,
+					replies: c.replies || []
 				}));
 				
 				if (pageNum === 1) {
@@ -118,8 +119,45 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 		console.log('Like comment:', commentId);
 	};
 
-	const handleReply = (parentId, content) => {
-		console.log('Reply to comment:', parentId, content);
+	const handleReply = async (parentId, content) => {
+		if (!content?.trim() || !postId) return;
+		setSubmitting(true);
+		
+		try {
+			const result = await commentsApi.replyToComment(postId, content, parentId);
+			if (result.ok && result.data) {
+				const newReply = {
+					id: result.data.id,
+					author: {
+						name: `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'User',
+						avatar: currentUser?.avatar || 'assets/images/comment_img.png'
+					},
+					content: content,
+					likes: 0,
+					isLiked: false,
+					timestamp: 'Just now',
+					repliesCount: 0,
+					replies: []
+				};
+				
+				setComments(prev => prev.map(comment => {
+					if (comment.id === parentId) {
+						return {
+							...comment,
+							repliesCount: (comment.repliesCount || 0) + 1,
+							replies: [...(comment.replies || []), newReply]
+						};
+					}
+					return comment;
+				}));
+				
+				onReplyComment?.();
+			}
+		} catch (error) {
+			console.error('Failed to reply to comment:', error);
+		} finally {
+			setSubmitting(false);
+		}
 	};
 
 	const handleShare = (commentId) => {

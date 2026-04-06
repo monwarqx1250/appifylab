@@ -14,6 +14,7 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 	const [showLikesModal, setShowLikesModal] = useState(false);
 
 	const repliesCount = comment?.repliesCount || 0;
+	const replies = comment?.replies || [];
 
 	const handleReplyClick = () => {
 		setShowReplyBox(!showReplyBox);
@@ -52,6 +53,7 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 						<CommentReply
 							commentId={comment?.id}
 							repliesCount={repliesCount}
+							replies={replies}
 							currentUser={currentUser}
 							onLike={onLike}
 							onReply={onReply}
@@ -64,7 +66,7 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 							placeholder="Write a reply"
 							textareaId={`reply-${comment?.id || 'default'}`}
 							onSubmit={(content) => {
-								onReply?.(comment?.id, content);
+								onReply?.(content);
 								setShowReplyBox(false);
 							}}
 						/>

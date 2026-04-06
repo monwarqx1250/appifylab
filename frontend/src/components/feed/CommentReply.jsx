@@ -8,6 +8,7 @@ import { RepliesLink, HideRepliesLink, LoadMoreReplies } from './CommentParts';
 export default function CommentReply({ 
   commentId, 
   repliesCount, 
+  replies = [],
   currentUser, 
   onLike, 
   onReply, 
@@ -15,10 +16,17 @@ export default function CommentReply({
   depth = 0 
 }) {
   const [showReplies, setShowReplies] = useState(false);
-  const [replies, setReplies] = useState([]);
+  const [localReplies, setLocalReplies] = useState(replies);
   const [loadingReplies, setLoadingReplies] = useState(false);
   const [repliesPage, setRepliesPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
+
+  React.useEffect(() => {
+    setLocalReplies(replies);
+    if (replies.length > 0) {
+      setShowReplies(true);
+    }
+  }, [replies]);
 
   const handleShowReplies = async () => {
     if (showReplies) {
@@ -57,7 +65,7 @@ export default function CommentReply({
 
       {showReplies && (
         <div className="_replies_container">
-          {replies.map((reply) => (
+          {localReplies.map((reply) => (
             <CommentItem
               key={reply.id}
               comment={reply}

@@ -183,9 +183,27 @@ export default function FeedPage() {
 		if (newComment) {
 			setPosts(prev => prev.map(post => {
 				if (post.id === postId) {
+					const addReplyToParent = (comments) => {
+						return comments.map(comment => {
+							if (comment.id === parentId) {
+								return {
+									...comment,
+									replies: [...(comment.replies || []), transformComment(newComment)],
+								};
+							}
+							if (comment.replies && comment.replies.length > 0) {
+								return {
+									...comment,
+									replies: addReplyToParent(comment.replies),
+								};
+							}
+							return comment;
+						});
+					};
+
 					return {
 						...post,
-						comments: [...(post.comments || []), transformComment(newComment)],
+						comments: addReplyToParent(post.comments || []),
 						commentCount: (post.commentCount || 0) + 1,
 					};
 				}
