@@ -132,6 +132,8 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 			if (result.ok && result.data) {
 				const newReply = {
 					id: result.data.id,
+					postId: postId,
+					parentId: parentId,
 					author: {
 						name: `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'User',
 						avatar: currentUser?.avatar || 'assets/images/comment_img.png'

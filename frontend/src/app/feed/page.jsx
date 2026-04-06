@@ -185,33 +185,41 @@ export default function FeedPage() {
 	}, [likeComment]);
 
 	const handleReplyComment = useCallback(async (content, parentId, postId) => {
-		console.log('handleReplyComment input:', { content, parentId, postId });
+		console.log('handleReplyComment:', { content, parentId, postId });
 		const newComment = await replyToComment(postId, content, parentId);
-		console.log('handleReplyComment result:', newComment);
+		console.log('newComment:', newComment);
 		if (newComment) {
 			setPosts(prev => prev.map(post => {
 				if (post.id === postId) {
+					console.log('Post found, checking comments:', post.comments?.map(c => c.id));
 					const addReplyToParent = (comments) => {
 						return comments.map(comment => {
 							if (comment.id === parentId) {
+								console.log('FOUND PARENT - adding reply to:', comment.id);
 								return {
 									...comment,
 									replies: [...(comment.replies || []), transformComment(newComment)],
+									repliesCount: (comment.repliesCount || 0) + 1,
 								};
 							}
 							if (comment.replies && comment.replies.length > 0) {
-								return {
-									...comment,
-									replies: addReplyToParent(comment.replies),
-								};
+								const updatedReplies = addReplyToParent(comment.replies);
+								if (updatedReplies !== comment.replies) {
+									return {
+										...comment,
+										replies: updatedReplies,
+									};
+								}
 							}
 							return comment;
 						});
 					};
 
+					const updatedComments = addReplyToParent(post.comments || []);
+					console.log('Updated comments structure:', JSON.stringify(updatedComments, null, 2));
 					return {
 						...post,
-						comments: addReplyToParent(post.comments || []),
+						comments: updatedComments,
 						commentCount: (post.commentCount || 0) + 1,
 					};
 				}

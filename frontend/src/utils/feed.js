@@ -47,6 +47,7 @@ export function transformComment(comment) {
   return {
     id: comment.id,
     postId,
+    parentId: comment.parentId || null,
     author: {
       name: comment.author?.name || 'User',
       avatar: comment.author?.avatar || 'assets/images/comment_img.png',

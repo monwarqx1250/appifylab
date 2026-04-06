@@ -23,8 +23,8 @@ export default function CommentReply({
   const [hasMore, setHasMore] = useState(false);
 
   const handleReply = (content, replyId, replyPostId) => {
-    console.log('CommentReply handleReply:', { replyId, replyPostId, content });
-    onReply?.(content);
+    console.log('CommentReply handleReply:', { commentId, replyId, replyPostId, content });
+    onReply?.(content, commentId, replyPostId);
   };
 
   React.useEffect(() => {
