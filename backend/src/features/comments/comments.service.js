@@ -36,6 +36,8 @@ class CommentsService {
 
     return {
       id: comment.id,
+      postId: comment.postId,
+      parentId: comment.parentId,
       author: {
         id: comment.author.id,
         name: `${comment.author.firstName} ${comment.author.lastName}`.trim()
@@ -44,8 +46,7 @@ class CommentsService {
       timestamp: this.formatTimeAgo(comment.createdAt),
       likes: comment._count.likes,
       isLiked: false,
-      repliesCount: comment._count.replies,
-      parentId: comment.parentId
+      repliesCount: comment._count.replies
     };
   }
 

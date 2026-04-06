@@ -41,7 +41,6 @@ export default function CommentThread({
 					currentUser={currentUser}
 					onLike={() => onLikeComment?.(comment.id)}
 					onReply={(content) => {
-						console.log('CommentThread onReply:', { commentId: comment.id, postId: comment.postId, content });
 						onReplyComment(content, comment.id, comment.postId)
 					}}
 					onShare={() => onShareComment?.(comment.id)}

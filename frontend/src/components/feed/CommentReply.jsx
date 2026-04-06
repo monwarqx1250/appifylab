@@ -23,8 +23,7 @@ export default function CommentReply({
   const [hasMore, setHasMore] = useState(false);
 
   const handleReply = (content, replyId, replyPostId) => {
-    console.log('CommentReply handleReply:', { commentId, replyId, replyPostId, content });
-    onReply?.(content, commentId, replyPostId);
+    onReply?.(content, replyId, replyPostId);
   };
 
   React.useEffect(() => {
@@ -79,7 +78,9 @@ export default function CommentReply({
               comment={reply}
               currentUser={currentUser}
               onLike={onLike}
-              onReply={handleReply}
+              onReply={(content) => {
+                onReply?.(content, reply.id, reply.postId);
+              }}
               onShare={onShare}
               depth={depth + 1}
             />

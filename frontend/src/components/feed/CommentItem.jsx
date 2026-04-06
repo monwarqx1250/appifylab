@@ -55,9 +55,10 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 							replies={replies}
 							currentUser={currentUser}
 							onLike={onLike}
-							onReply={(content) => {
-								const replyPostId = comment?.postId || (comment?.parent?.postId);
-								onReply?.(content, comment?.id, replyPostId);
+							onReply={(content, replyId, replyPostId) => {
+								const parentId = replyId || comment?.id;
+								const parentPostId = replyPostId || comment?.postId;
+								onReply?.(content, parentId, parentPostId);
 							}}
 							onShare={onShare}
 							depth={depth}
@@ -68,7 +69,7 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 							placeholder="Write a reply"
 							textareaId={`reply-${comment?.id || 'default'}`}
 							onSubmit={(content) => {
-								onReply?.(content);
+								onReply?.(content, comment?.id, comment?.postId);
 								setShowReplyBox(false);
 							}}
 						/>

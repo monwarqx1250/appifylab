@@ -185,17 +185,13 @@ export default function FeedPage() {
 	}, [likeComment]);
 
 	const handleReplyComment = useCallback(async (content, parentId, postId) => {
-		console.log('handleReplyComment:', { content, parentId, postId });
 		const newComment = await replyToComment(postId, content, parentId);
-		console.log('newComment:', newComment);
 		if (newComment) {
 			setPosts(prev => prev.map(post => {
 				if (post.id === postId) {
-					console.log('Post found, checking comments:', post.comments?.map(c => c.id));
-					const addReplyToParent = (comments) => {
+					const addReplyToParent = (comments, depth = 0) => {
 						return comments.map(comment => {
 							if (comment.id === parentId) {
-								console.log('FOUND PARENT - adding reply to:', comment.id);
 								return {
 									...comment,
 									replies: [...(comment.replies || []), transformComment(newComment)],
@@ -203,20 +199,16 @@ export default function FeedPage() {
 								};
 							}
 							if (comment.replies && comment.replies.length > 0) {
-								const updatedReplies = addReplyToParent(comment.replies);
-								if (updatedReplies !== comment.replies) {
-									return {
-										...comment,
-										replies: updatedReplies,
-									};
-								}
+								return {
+									...comment,
+									replies: addReplyToParent(comment.replies, depth + 1),
+								};
 							}
 							return comment;
 						});
 					};
 
 					const updatedComments = addReplyToParent(post.comments || []);
-					console.log('Updated comments structure:', JSON.stringify(updatedComments, null, 2));
 					return {
 						...post,
 						comments: updatedComments,
