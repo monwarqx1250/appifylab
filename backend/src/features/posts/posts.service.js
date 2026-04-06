@@ -119,9 +119,7 @@ class PostsService {
     });
 
     return posts.map(post => {
-      // Check if current user liked by looking at likes array
       const currentUserLiked = post.likes.some(like => like.userId === userId);
-      
       return {
         ...this.formatPostAttachments(post),
         isLiked: currentUserLiked,
@@ -131,18 +129,7 @@ class PostsService {
           name: `${like.user.firstName} ${like.user.lastName}`.trim(),
         })),
         commentCount: post._count.comments,
-        comments: post.comments.map(comment => ({
-          id: comment.id,
-          author: {
-            id: comment.author.id,
-            name: `${comment.author.firstName} ${comment.author.lastName}`.trim(),
-          },
-          content: comment.content,
-          timestamp: this.formatTimeAgo(comment.createdAt),
-          likes: comment._count?.likes || 0,
-          isLiked: comment.likes.length > 0,
-          repliesCount: comment._count?.replies || 0,
-        }))
+        comments: post.comments.map(comment => this.formatComment(comment, post.id))
       };
     });
   }
@@ -173,7 +160,7 @@ class PostsService {
             author: { select: { id: true, firstName: true, lastName: true } },
             _count: { select: { replies: true, likes: true } },
             likes: {
-              where: { userId },
+              where: { userId: this.userId },
               select: { id: true }
             }
           }
@@ -194,20 +181,25 @@ class PostsService {
           name: `${like.user.firstName} ${like.user.lastName}`.trim(),
         })),
         commentCount: post._count.comments,
-        comments: post.comments.map(comment => ({
-          id: comment.id,
-          author: {
-            id: comment.author.id,
-            name: `${comment.author.firstName} ${comment.author.lastName}`.trim(),
-          },
-          content: comment.content,
-          timestamp: this.formatTimeAgo(comment.createdAt),
-          likes: comment._count?.likes || 0,
-          isLiked: comment.likes.length > 0,
-          repliesCount: comment._count?.replies || 0,
-        }))
+        comments: post.comments.map(comment => this.formatComment(comment, post.id))
       };
     });
+  }
+
+  formatComment(comment, postId) {
+    return {
+      id: comment.id,
+      postId: postId,
+      author: {
+        id: comment.author?.id || comment.authorId,
+        name: comment.author ? `${comment.author.firstName} ${comment.author.lastName}`.trim() : 'User',
+      },
+      content: comment.content,
+      timestamp: this.formatTimeAgo(comment.createdAt),
+      likes: comment._count?.likes || 0,
+      isLiked: comment.likes?.length > 0 || comment.isLiked || false,
+      repliesCount: comment._count?.replies || 0,
+    };
   }
 
   async getPostById(postId) {

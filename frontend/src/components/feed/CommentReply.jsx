@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import CommentItem from './CommentItem';
 import { commentsApi } from '../../lib/api';
 import { RepliesLink, HideRepliesLink, LoadMoreReplies } from './CommentParts';
+import { transformComment } from '@/utils/feed';
 
 export default function CommentReply({ 
   commentId, 
@@ -21,6 +22,11 @@ export default function CommentReply({
   const [repliesPage, setRepliesPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
 
+  const handleReply = (content, replyId, replyPostId) => {
+    console.log('CommentReply handleReply:', { replyId, replyPostId, content });
+    onReply?.(content);
+  };
+
   React.useEffect(() => {
     setLocalReplies(replies);
     if (replies.length > 0) {
@@ -36,7 +42,8 @@ export default function CommentReply({
     setLoadingReplies(true);
     const result = await commentsApi.getReplies(commentId, 1, 10);
     if (result.ok && result.data) {
-      setReplies(result.data.comments || []);
+      const transformedReplies = (result.data.comments || []).map(transformComment);
+      setLocalReplies(transformedReplies);
       setHasMore(result.data.hasMore || false);
       setRepliesPage(1);
       setShowReplies(true);
@@ -48,7 +55,8 @@ export default function CommentReply({
     const nextPage = repliesPage + 1;
     const result = await commentsApi.getReplies(commentId, nextPage, 10);
     if (result.ok && result.data) {
-      setReplies(prev => [...prev, ...(result.data.comments || [])]);
+      const transformedReplies = (result.data.comments || []).map(transformComment);
+      setLocalReplies(prev => [...prev, ...transformedReplies]);
       setHasMore(result.data.hasMore || false);
       setRepliesPage(nextPage);
     }
@@ -71,7 +79,7 @@ export default function CommentReply({
               comment={reply}
               currentUser={currentUser}
               onLike={onLike}
-              onReply={onReply}
+              onReply={handleReply}
               onShare={onShare}
               depth={depth + 1}
             />

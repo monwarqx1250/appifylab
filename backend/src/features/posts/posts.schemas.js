@@ -139,6 +139,7 @@ const getPostsSchema = {
               type: 'object',
               properties: {
                 id: { type: 'string' },
+                postId: { type: 'string' },
                 author: {
                   type: 'object',
                   properties: {

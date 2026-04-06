@@ -86,7 +86,7 @@ export default function PostCard({
 					onLoadPrevious={() => setShowCommentsModal(true)}
 					onAddComment={(content) => onAddComment?.(content, post?.id)}
 					onLikeComment={(commentId) => onLikeComment?.(commentId, post?.id)}
-					onReplyComment={(commentId, content) => onReplyComment?.(content, commentId, post?.id)}
+					onReplyComment={(content, commentId, postId) => onReplyComment?.(content, commentId, postId)}
 					onShareComment={onShareComment}
 				/>
 			</div>

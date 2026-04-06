@@ -35,8 +35,18 @@ export function transformPost(post) {
 }
 
 export function transformComment(comment) {
+  let postId = null;
+  if (comment.postId) {
+    postId = comment.postId;
+  } else if (comment.parentId) {
+    if (comment.parent && typeof comment.parent === 'object' && comment.parent.postId) {
+      postId = comment.parent.postId;
+    }
+  }
+  
   return {
     id: comment.id,
+    postId,
     author: {
       name: comment.author?.name || 'User',
       avatar: comment.author?.avatar || 'assets/images/comment_img.png',

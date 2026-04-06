@@ -27,7 +27,7 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 	};
 
 	const containerClass = depth > 0 ? '_comment_main _comment_nested' : '_comment_main';
-
+	console.log('CommentItem comment:', comment);
 	return (
 		<>
 			<div className={containerClass}>
@@ -56,7 +56,10 @@ export default function CommentItem({ comment, currentUser, onLike, onReply, onS
 							replies={replies}
 							currentUser={currentUser}
 							onLike={onLike}
-							onReply={onReply}
+							onReply={(content) => {
+								const replyPostId = comment?.postId || (comment?.parent?.postId);
+								onReply?.(content, comment?.id, replyPostId);
+							}}
 							onShare={onShare}
 							depth={depth}
 						/>

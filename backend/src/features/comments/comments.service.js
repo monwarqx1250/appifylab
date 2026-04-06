@@ -84,6 +84,7 @@ class CommentsService {
 
     const commentsWithRepliesCount = comments.map(comment => ({
       id: comment.id,
+      postId: comment.postId,
       author: {
         id: comment.author.id,
         name: `${comment.author.firstName} ${comment.author.lastName}`.trim()
@@ -134,6 +135,8 @@ class CommentsService {
 
     const repliesData = replies.map(reply => ({
       id: reply.id,
+      postId: reply.postId,
+      parentId: reply.parentId,
       author: {
         id: reply.author.id,
         name: `${reply.author.firstName} ${reply.author.lastName}`.trim()
@@ -153,7 +156,7 @@ class CommentsService {
   }
 
   async getAllComments(postId) {
-    return await this.prisma.comment.findMany({
+    const comments = await this.prisma.comment.findMany({
       where: { postId },
       orderBy: { createdAt: 'asc' },
       include: {
@@ -162,9 +165,26 @@ class CommentsService {
         },
         _count: {
           select: { likes: true, replies: true }
+        },
+        parent: {
+          select: { postId: true }
         }
       }
     });
+
+    return comments.map(comment => ({
+      id: comment.id,
+      postId: comment.postId,
+      parentId: comment.parentId,
+      author: {
+        id: comment.author.id,
+        name: `${comment.author.firstName} ${comment.author.lastName}`.trim()
+      },
+      content: comment.content,
+      likes: comment._count.likes,
+      repliesCount: comment._count.replies,
+      parent: comment.parent ? { postId: comment.parent.postId } : null
+    }));
   }
 }
 

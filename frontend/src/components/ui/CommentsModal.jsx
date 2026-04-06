@@ -29,6 +29,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 				console.log('Comments array:', commentsArray.length);
 				const transformed = commentsArray.map(c => ({
 					id: c.id,
+					postId: c.postId,
 					author: {
 						name: c.author?.name || 'User',
 						avatar: c.author?.avatar || 'assets/images/txt_img.png'
@@ -95,6 +96,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 			if (result.ok && result.data) {
 				const newComment = {
 					id: result.data.id,
+					postId: postId,
 					author: {
 						name: `${currentUser?.firstName || ''} ${currentUser?.lastName || ''}`.trim() || 'User',
 						avatar: currentUser?.avatar || 'assets/images/comment_img.png'
@@ -103,9 +105,10 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 					likes: 0,
 					isLiked: false,
 					timestamp: 'Just now',
-					repliesCount: 0
+					repliesCount: 0,
+					replies: []
 				};
-				setComments(prev => [...prev, newComment]);
+				setComments(prev => [newComment, ...prev]);
 				onAddComment?.();
 			}
 		} catch (error) {
@@ -120,6 +123,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 	};
 
 	const handleReply = async (parentId, content) => {
+		console.log('CommentsModal handleReply input:', { parentId, content, postId });
 		if (!content?.trim() || !postId) return;
 		setSubmitting(true);
 		
@@ -140,17 +144,26 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 					replies: []
 				};
 				
-				setComments(prev => prev.map(comment => {
-					if (comment.id === parentId) {
-						return {
-							...comment,
-							repliesCount: (comment.repliesCount || 0) + 1,
-							replies: [...(comment.replies || []), newReply]
-						};
-					}
-					return comment;
-				}));
+				const addReplyToParent = (comments) => {
+					return comments.map(comment => {
+						if (comment.id === parentId) {
+							return {
+								...comment,
+								repliesCount: (comment.repliesCount || 0) + 1,
+								replies: [...(comment.replies || []), newReply]
+							};
+						}
+						if (comment.replies && comment.replies.length > 0) {
+							return {
+								...comment,
+								replies: addReplyToParent(comment.replies),
+							};
+						}
+						return comment;
+					});
+				};
 				
+				setComments(prev => addReplyToParent(prev));
 				onReplyComment?.();
 			}
 		} catch (error) {

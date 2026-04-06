@@ -138,11 +138,17 @@ export default function FeedPage() {
 		const post = posts.find(p => p.id === postId);
 		if (post && !post.commentsLoaded) {
 			fetchComments(postId).then(comments => {
+				console.log('handleComment API result:', comments);
+				const transformed = (comments || []).map(c => {
+					console.log('Comment before transform:', c);
+					return transformComment(c);
+				});
+				console.log('Comments after transform:', transformed);
 				setPosts(prev => prev.map(p => {
 					if (p.id === postId) {
 						return {
 							...p,
-							comments: comments,
+							comments: transformed,
 							commentsLoaded: true,
 						};
 					}
@@ -161,7 +167,7 @@ export default function FeedPage() {
 				if (post.id === postId) {
 					return {
 						...post,
-						comments: [...(post.comments || []), transformComment(newComment)],
+						comments: [transformComment(newComment), ...(post.comments || [])],
 						commentCount: (post.commentCount || 0) + 1,
 					};
 				}
@@ -179,7 +185,9 @@ export default function FeedPage() {
 	}, [likeComment]);
 
 	const handleReplyComment = useCallback(async (content, parentId, postId) => {
+		console.log('handleReplyComment input:', { content, parentId, postId });
 		const newComment = await replyToComment(postId, content, parentId);
+		console.log('handleReplyComment result:', newComment);
 		if (newComment) {
 			setPosts(prev => prev.map(post => {
 				if (post.id === postId) {
