@@ -2,7 +2,7 @@
 
 import React, { useEffect } from 'react';
 
-export default function Modal({ isOpen, onClose, title, children, maxWidth = '500px' }) {
+export default function Modal({ isOpen, onClose, title, children, maxWidth = '500px', isDarkMode = false }) {
 	useEffect(() => {
 		if (isOpen) {
 			document.body.style.overflow = 'hidden';
@@ -37,7 +37,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
 		>
 			<div 
 				style={{
-					backgroundColor: 'white',
+					backgroundColor: isDarkMode ? '#223855' : 'white',
 					borderRadius: '12px',
 					width: '100%',
 					maxWidth: maxWidth,
@@ -50,13 +50,13 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
 				<div 
 					style={{
 						padding: '16px 20px',
-						borderBottom: '1px solid #e5e5e5',
+						borderBottom: `1px solid ${isDarkMode ? '#112032' : '#e5e5e5'}`,
 						display: 'flex',
 						alignItems: 'center',
 						justifyContent: 'space-between',
 					}}
 				>
-					<h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>{title}</h3>
+					<h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600', color: isDarkMode ? '#fff' : '#333' }}>{title}</h3>
 					<button
 						onClick={onClose}
 						style={{
@@ -69,7 +69,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '50
 							justifyContent: 'center',
 						}}
 					>
-						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#666" strokeWidth="2">
+						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke={isDarkMode ? '#fff' : '#666'} strokeWidth="2">
 							<path d="M18 6L6 18M6 6l12 12"/>
 						</svg>
 					</button>

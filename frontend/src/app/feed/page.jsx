@@ -279,6 +279,7 @@ export default function FeedPage() {
 														onReplyComment={handleReplyComment}
 														onShareComment={handleShareComment}
 														onDeletePost={handleDeletePost}
+														isDarkMode={isDarkMode}
 													/>
 												))
 											)}
@@ -286,7 +287,7 @@ export default function FeedPage() {
 												<p style={{ textAlign: 'center', padding: '20px' }}>Loading more posts...</p>
 											)}
 											{!hasMore && posts.length > 0 && (
-												<p style={{ textAlign: 'center', padding: '20px', color: '#666' }}>No more posts</p>
+												<p style={{ textAlign: 'center', padding: '20px', color: isDarkMode ? '#aaa' : '#666' }}>No more posts</p>
 											)}
 											<div ref={loadMoreRef} style={{ height: '1px' }} />
 										</div>
