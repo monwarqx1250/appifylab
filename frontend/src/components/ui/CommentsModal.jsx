@@ -6,9 +6,10 @@ import Modal from './Modal';
 import CommentComposer from '@/components/feed/CommentComposer';
 import CommentItem from '@/components/feed/CommentItem';
 
-export default function CommentsModal({ isOpen, onClose, postId, currentUser, onAddComment, onReplyComment }) {
+export default function CommentsModal({ isOpen, onClose, postId, currentUser, onAddComment, onReplyComment, isDarkMode = false }) {
 	const [comments, setComments] = useState([]);
 	const [loading, setLoading] = useState(false);
+	const [loadingMore, setLoadingMore] = useState(false);
 	const [submitting, setSubmitting] = useState(false);
 	const [page, setPage] = useState(1);
 	const [hasMore, setHasMore] = useState(true);
@@ -18,7 +19,12 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 	const loadComments = useCallback(async (pageNum = 1) => {
 		if (fetchingRef.current) return;
 		fetchingRef.current = true;
-		setLoading(true);
+		
+		if (pageNum === 1) {
+			setLoading(true);
+		} else {
+			setLoadingMore(true);
+		}
 		console.log('Loading page:', pageNum);
 		
 		try {
@@ -54,6 +60,7 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 			console.error('Failed to load comments:', error);
 		} finally {
 			setLoading(false);
+			setLoadingMore(false);
 			fetchingRef.current = false;
 		}
 	}, [postId]);
@@ -180,9 +187,9 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 	};
 
 	return (
-		<Modal isOpen={isOpen} onClose={onClose} title="Comments" maxWidth="500px">
+		<Modal isOpen={isOpen} onClose={onClose} title="Comments" maxWidth="500px" isDarkMode={isDarkMode}>
 			<div style={{ maxHeight: '60vh', display: 'flex', flexDirection: 'column', padding : '14px' }}>
-				<div style={{ padding: '12px 16px', borderBottom: '1px solid #e5e5e5' }}>
+				<div style={{ padding: '12px 16px', borderBottom: `1px solid ${isDarkMode ? '#112032' : '#e5e5e5'}` }}>
 					<CommentComposer
 						currentUser={currentUser}
 						placeholder="Write a comment..."
@@ -194,11 +201,11 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 				
 				<div style={{ flex: 1, overflowY: 'auto', padding: '0 6px' }}>
 					{loading ? (
-						<div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+						<div style={{ padding: '40px', textAlign: 'center', color: isDarkMode ? '#aaa' : '#666' }}>
 							Loading comments...
 						</div>
 					) : comments.length === 0 ? (
-						<div style={{ padding: '40px', textAlign: 'center', color: '#666' }}>
+						<div style={{ padding: '40px', textAlign: 'center', color: isDarkMode ? '#aaa' : '#666' }}>
 							No comments yet. Be the first to comment!
 						</div>
 					) : (
@@ -214,13 +221,11 @@ export default function CommentsModal({ isOpen, onClose, postId, currentUser, on
 						))
 					)}
 					
-					{loading && (
-						<div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+					{loadingMore && (
+						<div style={{ padding: '20px', textAlign: 'center', color: isDarkMode ? '#aaa' : '#666' }}>
 							Loading more...
 						</div>
 					)}
-					
-					<div ref={loadMoreRef} style={{ height: '1px' }} />
 					
 					<div ref={loadMoreRef} style={{ height: '1px' }} />
 				</div>

@@ -30,6 +30,7 @@ export default function FeedPage() {
 	const [loadingMore, setLoadingMore] = useState(false);
 	const loadMoreRef = useRef(null);
 	const fetchingRef = useRef(false);
+	const postsFetchedRef = useRef(false);
 
 	const { likePost, likeComment, loading: likeLoading } = useLike();
 	const { fetchComments, addComment, replyToComment, loading: commentLoading } = useComments();
@@ -43,7 +44,15 @@ export default function FeedPage() {
 		
 		const result = await postsApi.getAll(pageNum);
 		if (result.ok) {
-			const transformed = result.data.map(transformPost);
+			const data = result.data;
+			if (!data || !data.posts) {
+				console.error('Invalid response:', data);
+				setLoadingMore(false);
+				fetchingRef.current = false;
+				return;
+			}
+			const postsList = data.posts;
+			const transformed = postsList.map(transformPost);
 			if (pageNum === 1) {
 				setPosts(transformed);
 			} else {
@@ -53,7 +62,9 @@ export default function FeedPage() {
 					return [...prev, ...newPosts];
 				});
 			}
-			setHasMore(transformed.length > 0);
+			setHasMore(data.hasMore === true);
+		} else {
+			setHasMore(false);
 		}
 		
 		if (pageNum === 1) {
@@ -71,7 +82,8 @@ export default function FeedPage() {
 	}, [isLoading, isAuthenticated, router]);
 
 	useEffect(() => {
-		if (isAuthenticated) {
+		if (isAuthenticated && !postsFetchedRef.current) {
+			postsFetchedRef.current = true;
 			fetchPosts(1);
 		}
 	}, [isAuthenticated]);
@@ -83,11 +95,9 @@ export default function FeedPage() {
 			(entries) => {
 				if (entries[0].isIntersecting && !fetchingRef.current) {
 					fetchingRef.current = true;
-					setPage(prev => {
-						const nextPage = prev + 1;
-						fetchPosts(nextPage);
-						return nextPage;
-					});
+					const nextPage = page + 1;
+					setPage(nextPage);
+					fetchPosts(nextPage);
 				}
 			},
 			{ rootMargin: '200px' }
@@ -98,7 +108,7 @@ export default function FeedPage() {
 		}
 
 		return () => observer.disconnect();
-	}, [hasMore, loadingMore, postsLoading]);
+	}, [hasMore, loadingMore, postsLoading, page, fetchPosts]);
 
 	const handlePostCreated = useCallback((newPost) => {
 		console.log('handlePostCreated - raw:', newPost);
@@ -279,6 +289,7 @@ export default function FeedPage() {
 														onReplyComment={handleReplyComment}
 														onShareComment={handleShareComment}
 														onDeletePost={handleDeletePost}
+														isDarkMode={isDarkMode}
 													/>
 												))
 											)}
@@ -286,7 +297,7 @@ export default function FeedPage() {
 												<p style={{ textAlign: 'center', padding: '20px' }}>Loading more posts...</p>
 											)}
 											{!hasMore && posts.length > 0 && (
-												<p style={{ textAlign: 'center', padding: '20px', color: '#666' }}>No more posts</p>
+												<p style={{ textAlign: 'center', padding: '20px', color: isDarkMode ? '#aaa' : '#666' }}>No more posts</p>
 											)}
 											<div ref={loadMoreRef} style={{ height: '1px' }} />
 										</div>

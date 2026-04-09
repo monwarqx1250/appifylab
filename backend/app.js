@@ -11,7 +11,14 @@ module.exports = async function (fastify, opts) {
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   });
 
-  fastify.register(require('@fastify/multipart'))
+  const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 100 * 1024 * 1024; // 100MB default
+
+  fastify.register(require('@fastify/multipart'), {
+    limits: {
+      fileSize: MAX_FILE_SIZE,
+    },
+    throwFileSizeLimit: true,
+  });
 
   fastify.register(fastifyStatic, {
     root: path.join(__dirname, 'uploads'),

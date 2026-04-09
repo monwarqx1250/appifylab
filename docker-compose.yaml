@@ -1,0 +1,41 @@
+name: appifylab
+
+services:
+  backend:
+    image: monwarqx1250/appifylab:latest
+    environment:
+      - PORT=3100
+    ports:
+      - "3100:3100"
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/dev.db:/app/dev.db
+    command: npm run dev
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.imti.online`)"
+      - "traefik.http.routers.backend.entrypoints=web,websecure"
+      - "traefik.http.routers.backend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.backend.loadbalancer.server.port=3001"
+    networks:
+      - appifylab
+
+  frontend:
+    image: monwarqx1250/appifylab-frontend:latest
+    environment:
+      - PORT=3000
+    ports:
+      - "5000:3000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`appifylab.imti.online`)"
+      - "traefik.http.routers.frontend.entrypoints=web,websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=letsencrypt"
+      - "traefik.http.services.frontend.loadbalancer.server.port=3000"
+    networks:
+      - appifylab
+
+networks:
+  appifylab:
+    name: appifylab_network

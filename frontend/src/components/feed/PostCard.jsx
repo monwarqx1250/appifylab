@@ -23,7 +23,8 @@ export default function PostCard({
 	onLikeComment,
 	onReplyComment,
 	onShareComment,
-	onDeletePost
+	onDeletePost,
+	isDarkMode = false
 }) {
 	const [showLikesModal, setShowLikesModal] = useState(false);
 	const [showCommentsModal, setShowCommentsModal] = useState(false);
@@ -100,6 +101,7 @@ export default function PostCard({
 				onClose={() => setShowCommentsModal(false)}
 				postId={post?.id}
 				currentUser={currentUser}
+				isDarkMode={isDarkMode}
 				onAddComment={() => onAddComment?.(null, post?.id)}
 				onReplyComment={() => onReplyComment?.(null, null, post?.id)}
 			/>

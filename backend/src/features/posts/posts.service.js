@@ -77,61 +77,76 @@ class PostsService {
   async getFeedPosts(userId, page, limit) {
     const skip = (page - 1) * limit;
 
-    const posts = await this.prisma.post.findMany({
-      where: {
-        OR: [
-          { visibility: 'public' },
-          { visibility: 'private', authorId: userId }
-        ]
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        author: {
-          select: { id: true, firstName: true, lastName: true }
+    const [posts, totalCount] = await Promise.all([
+      this.prisma.post.findMany({
+        where: {
+          OR: [
+            { visibility: 'public' },
+            { visibility: 'private', authorId: userId }
+          ]
         },
-        attachments: true,
-        _count: {
-          select: { comments: true, likes: true }
-        },
-        likes: {
-          include: {
-            user: { select: { id: true, firstName: true, lastName: true } }
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          author: {
+            select: { id: true, firstName: true, lastName: true }
           },
-          orderBy: { createdAt: 'desc' },
-          take: 5
-        },
-        comments: {
-          where: { parentId: null },
-          take: 2,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            author: { select: { id: true, firstName: true, lastName: true } },
-            _count: { select: { replies: true, likes: true } },
-            likes: {
-              where: { userId },
-              select: { id: true }
+          attachments: true,
+          _count: {
+            select: { comments: true, likes: true }
+          },
+          likes: {
+            include: {
+              user: { select: { id: true, firstName: true, lastName: true } }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 5
+          },
+          comments: {
+            where: { parentId: null },
+            take: 2,
+            orderBy: { createdAt: 'desc' },
+            include: {
+              author: { select: { id: true, firstName: true, lastName: true } },
+              _count: { select: { replies: true, likes: true } },
+              likes: {
+                where: { userId },
+                select: { id: true }
+              }
             }
           }
         }
-      }
-    });
+      }),
+      this.prisma.post.count({
+        where: {
+          OR: [
+            { visibility: 'public' },
+            { visibility: 'private', authorId: userId }
+          ]
+        }
+      })
+    ]);
 
-    return posts.map(post => {
-      const currentUserLiked = post.likes.some(like => like.userId === userId);
-      return {
-        ...this.formatPostAttachments(post),
-        isLiked: currentUserLiked,
-        likesCount: post._count.likes,
-        likedBy: post.likes.map(like => ({
-          id: like.user.id,
-          name: `${like.user.firstName} ${like.user.lastName}`.trim(),
-        })),
-        commentCount: post._count.comments,
-        comments: post.comments.map(comment => this.formatComment(comment, post.id))
-      };
-    });
+    const hasMore = skip + posts.length < totalCount;
+
+    return {
+      posts: posts.map(post => {
+        const currentUserLiked = post.likes.some(like => like.userId === userId);
+        return {
+          ...this.formatPostAttachments(post),
+          isLiked: currentUserLiked,
+          likesCount: post._count.likes,
+          likedBy: post.likes.map(like => ({
+            id: like.user.id,
+            name: `${like.user.firstName} ${like.user.lastName}`.trim(),
+          })),
+          commentCount: post._count.comments,
+          comments: post.comments.map(comment => this.formatComment(comment, post.id))
+        };
+      }),
+      hasMore
+    };
   }
 
   async getAllPosts() {

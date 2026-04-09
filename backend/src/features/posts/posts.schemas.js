@@ -86,76 +86,82 @@ const getPostsSchema = {
   },
   response: {
     200: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          id: { type: 'string' },
-          content: { type: 'string' },
-          visibility: { type: 'string' },
-          author: {
+      type: 'object',
+      properties: {
+        posts: {
+          type: 'array',
+          items: {
             type: 'object',
             properties: {
               id: { type: 'string' },
-              firstName: { type: 'string' },
-              lastName: { type: 'string' }
-            }
-          },
-          attachments: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-                fileUrl: { type: 'string' },
-                fileType: { type: 'string' }
-              }
-            }
-          },
-          createdAt: { type: 'string', format: 'date-time' },
-          _count: {
-            type: 'object',
-            properties: {
-              comments: { type: 'integer' },
-              likes: { type: 'integer' }
-            }
-          },
-          isLiked: { type: 'boolean' },
-          likesCount: { type: 'integer' },
-          likedBy: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-                name: { type: 'string' }
-              }
-            }
-          },
-          commentCount: { type: 'integer' },
-          comments: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                id: { type: 'string' },
-                postId: { type: 'string' },
-                author: {
+              content: { type: 'string' },
+              visibility: { type: 'string' },
+              author: {
+                type: 'object',
+                properties: {
+                  id: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' }
+                }
+              },
+              attachments: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    fileUrl: { type: 'string' },
+                    fileType: { type: 'string' }
+                  }
+                }
+              },
+              createdAt: { type: 'string', format: 'date-time' },
+              _count: {
+                type: 'object',
+                properties: {
+                  comments: { type: 'integer' },
+                  likes: { type: 'integer' }
+                }
+              },
+              isLiked: { type: 'boolean' },
+              likesCount: { type: 'integer' },
+              likedBy: {
+                type: 'array',
+                items: {
                   type: 'object',
                   properties: {
                     id: { type: 'string' },
                     name: { type: 'string' }
                   }
-                },
-                content: { type: 'string' },
-                timestamp: { type: 'string' },
-                likes: { type: 'integer' },
-                isLiked: { type: 'boolean' },
-                repliesCount: { type: 'integer' }
+                }
+              },
+              commentCount: { type: 'integer' },
+              comments: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    id: { type: 'string' },
+                    postId: { type: 'string' },
+                    author: {
+                      type: 'object',
+                      properties: {
+                        id: { type: 'string' },
+                        name: { type: 'string' }
+                      }
+                    },
+                    content: { type: 'string' },
+                    timestamp: { type: 'string' },
+                    likes: { type: 'integer' },
+                    isLiked: { type: 'boolean' },
+                    repliesCount: { type: 'integer' }
+                  }
+                }
               }
             }
           }
-        }
+        },
+        hasMore: { type: 'boolean' }
       }
     },
     401: {
