@@ -1,3 +1,5 @@
+const { Prisma } = require('@prisma/client');
+
 const UPLOAD_BASE_URL = process.env.UPLOAD_BASE_URL || '/uploads';
 const SITE_URL = process.env.SITE_URL || 'http://localhost:3001';
 
@@ -76,81 +78,17 @@ class PostsService {
 
   async getFeedPosts(userId, page, limit) {
     const skip = (page - 1) * limit;
+    const takeLimit = parseInt(limit, 10);
 
-    const [posts, totalCount] = await Promise.all([
-      this.prisma.post.findMany({
-        where: {
-          OR: [
-            { visibility: 'public' },
-            { visibility: 'private', authorId: userId }
-          ]
-        },
-        skip,
-        take: limit,
-        orderBy: { createdAt: 'desc' },
-        include: {
-          author: {
-            select: { id: true, firstName: true, lastName: true }
-          },
-          attachments: true,
-          _count: {
-            select: { comments: true, likes: true }
-          },
-          likes: {
-            include: {
-              user: { select: { id: true, firstName: true, lastName: true } }
-            },
-            orderBy: { createdAt: 'desc' },
-            take: 5
-          },
-          comments: {
-            where: { parentId: null },
-            take: 2,
-            orderBy: { createdAt: 'desc' },
-            include: {
-              author: { select: { id: true, firstName: true, lastName: true } },
-              _count: { select: { replies: true, likes: true } },
-              likes: {
-                where: { userId },
-                select: { id: true }
-              }
-            }
-          }
-        }
-      }),
-      this.prisma.post.count({
-        where: {
-          OR: [
-            { visibility: 'public' },
-            { visibility: 'private', authorId: userId }
-          ]
-        }
-      })
-    ]);
-
-    const hasMore = skip + posts.length < totalCount;
-
-    return {
-      posts: posts.map(post => {
-        const currentUserLiked = post.likes.some(like => like.userId === userId);
-        return {
-          ...this.formatPostAttachments(post),
-          isLiked: currentUserLiked,
-          likesCount: post._count.likes,
-          likedBy: post.likes.map(like => ({
-            id: like.user.id,
-            name: `${like.user.firstName} ${like.user.lastName}`.trim(),
-          })),
-          commentCount: post._count.comments,
-          comments: post.comments.map(comment => this.formatComment(comment, post.id))
-        };
-      }),
-      hasMore
-    };
-  }
-
-  async getAllPosts() {
-    const posts = await this.prisma.post.findMany({
+    const fetchedPosts = await this.prisma.post.findMany({
+      where: {
+        OR: [
+          { visibility: 'public' },
+          { visibility: 'private', authorId: userId }
+        ]
+      },
+      skip,
+      take: takeLimit + 1,
       orderBy: { createdAt: 'desc' },
       include: {
         author: {
@@ -160,13 +98,6 @@ class PostsService {
         _count: {
           select: { comments: true, likes: true }
         },
-        likes: {
-          include: {
-            user: { select: { id: true, firstName: true, lastName: true } }
-          },
-          orderBy: { createdAt: 'desc' },
-          take: 5
-        },
         comments: {
           where: { parentId: null },
           take: 2,
@@ -175,7 +106,7 @@ class PostsService {
             author: { select: { id: true, firstName: true, lastName: true } },
             _count: { select: { replies: true, likes: true } },
             likes: {
-              where: { userId: this.userId },
+              where: { userId },
               select: { id: true }
             }
           }
@@ -183,22 +114,64 @@ class PostsService {
       }
     });
 
-    const userId = this.userId;
-    return posts.map(post => {
-      const currentUserLiked = userId ? post.likes.some(like => like.userId === userId) : false;
-      
-      return {
+    const hasMore = fetchedPosts.length > takeLimit;
+    const posts = hasMore ? fetchedPosts.slice(0, takeLimit) : fetchedPosts;
+
+    const postIds = posts.map(p => p.id);
+    const [currentUserLikes, latestLikes] = postIds.length === 0
+      ? [[], []]
+      : await Promise.all([
+        this.prisma.like.findMany({
+          where: {
+            userId,
+            postId: { in: postIds }
+          },
+          select: { postId: true }
+        }),
+        this.prisma.$queryRaw`
+          WITH ranked_likes AS (
+            SELECT
+              l."postId",
+              u.id AS "userId",
+              u."firstName",
+              u."lastName",
+              ROW_NUMBER() OVER (
+                PARTITION BY l."postId"
+                ORDER BY l."createdAt" DESC, l.id DESC
+              ) AS row_num
+            FROM "Like" l
+            JOIN "User" u ON u.id = l."userId"
+            WHERE l."postId" IN (${Prisma.join(postIds)})
+          )
+          SELECT "postId", "userId", "firstName", "lastName", row_num
+          FROM ranked_likes
+          WHERE row_num <= 5
+          ORDER BY "postId", row_num
+        `
+      ]);
+
+    const likedPostIds = new Set(currentUserLikes.map(like => like.postId));
+
+    const likesByPostId = latestLikes.reduce((acc, like) => {
+      if (!acc[like.postId]) acc[like.postId] = [];
+      acc[like.postId].push({
+        id: like.userId,
+        name: `${like.firstName} ${like.lastName}`.trim(),
+      });
+      return acc;
+    }, {});
+
+    return {
+      posts: posts.map(post => ({
         ...this.formatPostAttachments(post),
-        isLiked: currentUserLiked,
+        isLiked: likedPostIds.has(post.id),
         likesCount: post._count.likes,
-        likedBy: post.likes.map(like => ({
-          id: like.user.id,
-          name: `${like.user.firstName} ${like.user.lastName}`.trim(),
-        })),
+        likedBy: likesByPostId[post.id] || [],
         commentCount: post._count.comments,
         comments: post.comments.map(comment => this.formatComment(comment, post.id))
-      };
-    });
+      })),
+      hasMore
+    };
   }
 
   formatComment(comment, postId) {

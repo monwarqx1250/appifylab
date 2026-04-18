@@ -131,12 +131,37 @@ describe('PostsService', () => {
     it('should return public posts and user private posts', async () => {
       const userId = 'user-1';
       const mockPosts = [
-        { id: 'post-1', content: 'Public post', visibility: 'public', authorId: 'user-2', attachments: [] },
-        { id: 'post-2', content: 'My private post', visibility: 'private', authorId: userId, attachments: [] }
+        {
+          id: 'post-1',
+          content: 'Public post',
+          visibility: 'public',
+          authorId: 'user-2',
+          attachments: [],
+          _count: { comments: 2, likes: 3 },
+          comments: []
+        },
+        {
+          id: 'post-2',
+          content: 'My private post',
+          visibility: 'private',
+          authorId: userId,
+          attachments: [],
+          _count: { comments: 1, likes: 1 },
+          comments: []
+        }
       ];
 
       const mockFindMany = vi.fn().mockResolvedValue(mockPosts);
-      prisma.post = { findMany: mockFindMany };
+      const mockCount = vi.fn().mockResolvedValue(mockPosts.length);
+      const mockLikeFindMany = vi.fn().mockResolvedValue([{ postId: 'post-1' }]);
+      const mockQueryRaw = vi.fn().mockResolvedValue([
+        { postId: 'post-1', userId: 'user-9', firstName: 'Jane', lastName: 'Doe', row_num: 1 },
+        { postId: 'post-2', userId: 'user-8', firstName: 'Alex', lastName: 'Smith', row_num: 1 }
+      ]);
+
+      prisma.post = { findMany: mockFindMany, count: mockCount };
+      prisma.like = { findMany: mockLikeFindMany };
+      prisma.$queryRaw = mockQueryRaw;
 
       const result = await postsService.getFeedPosts(userId, 1, 20);
 
@@ -153,17 +178,57 @@ describe('PostsService', () => {
         include: {
           author: { select: { id: true, firstName: true, lastName: true } },
           attachments: true,
-          _count: { select: { comments: true, likes: true } }
+          _count: { select: { comments: true, likes: true } },
+          comments: {
+            where: { parentId: null },
+            take: 2,
+            orderBy: { createdAt: 'desc' },
+            include: {
+              author: { select: { id: true, firstName: true, lastName: true } },
+              _count: { select: { replies: true, likes: true } },
+              likes: {
+                where: { userId },
+                select: { id: true }
+              }
+            }
+          }
         }
       });
-      expect(result).toHaveLength(2);
+      expect(mockLikeFindMany).toHaveBeenCalledWith({
+        where: {
+          userId,
+          postId: { in: ['post-1', 'post-2'] }
+        },
+        select: { postId: true }
+      });
+      expect(mockQueryRaw).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        posts: [
+          expect.objectContaining({
+            id: 'post-1',
+            isLiked: true,
+            likesCount: 3,
+            likedBy: [{ id: 'user-9', name: 'Jane Doe' }]
+          }),
+          expect.objectContaining({
+            id: 'post-2',
+            isLiked: false,
+            likesCount: 1,
+            likedBy: [{ id: 'user-8', name: 'Alex Smith' }]
+          })
+        ],
+        hasMore: false
+      });
     });
 
     it('should apply pagination', async () => {
       const userId = 'user-1';
       const mockFindMany = vi.fn().mockResolvedValue([]);
+      const mockCount = vi.fn().mockResolvedValue(0);
 
-      prisma.post = { findMany: mockFindMany };
+      prisma.post = { findMany: mockFindMany, count: mockCount };
+      prisma.like = { findMany: vi.fn() };
+      prisma.$queryRaw = vi.fn();
 
       await postsService.getFeedPosts(userId, 2, 10);
 
@@ -173,6 +238,8 @@ describe('PostsService', () => {
           take: 10
         })
       );
+      expect(prisma.like.findMany).not.toHaveBeenCalled();
+      expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
   });
 
