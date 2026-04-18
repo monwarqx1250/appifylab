@@ -30,13 +30,22 @@ class PostsService {
 
   async createPost(userId, data) {
     const { content, visibility, files } = data;
+    const hasAttachments = files?.length > 0;
     
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { firstName: true, lastName: true }
+    });
+
     const post = await this.prisma.post.create({
       data: {
         content,
         visibility: visibility || 'public',
         authorId: userId,
-        attachments: files?.length > 0 ? {
+        authorFirstName: user.firstName,
+        authorLastName: user.lastName,
+        hasAttachments,
+        attachments: hasAttachments ? {
           create: files.map(file => ({
             fileUrl: file.filename,
             fileType: file.mimetype
@@ -44,24 +53,27 @@ class PostsService {
         } : undefined
       },
       include: {
-        author: {
-          select: { id: true, firstName: true, lastName: true }
-        },
-        attachments: true,
-        _count: {
-          select: { comments: true, likes: true }
-        }
+        attachments: true
       }
     });
 
     const result = {
       ...this.formatPostAttachments(post),
+      author: {
+        id: userId,
+        firstName: user.firstName,
+        lastName: user.lastName
+      },
       isLiked: false,
       likesCount: 0,
       likedBy: [],
       commentCount: 0,
+      hasAttachments: post.hasAttachments,
       comments: [],
     };
+
+    const cache = require('../../services/cache.service');
+    await cache.invalidateAllFeeds();
     
     return result;
   }
@@ -69,6 +81,12 @@ class PostsService {
   formatPostAttachments(post) {
     return {
       ...post,
+      author: {
+        id: post.authorId,
+        firstName: post.authorFirstName,
+        lastName: post.authorLastName,
+        name: `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim()
+      },
       attachments: (post.attachments || []).map(att => ({
         ...att,
         fileUrl: this.formatAttachmentUrl(att.fileUrl)
@@ -76,102 +94,98 @@ class PostsService {
     };
   }
 
-  async getFeedPosts(userId, page, limit) {
+async getFeedPosts(userId, page, limit) {
     const skip = (page - 1) * limit;
     const takeLimit = parseInt(limit, 10);
+    const startTime = Date.now();
+    console.log(`[getFeedPosts] Start`);
 
-    const fetchedPosts = await this.prisma.post.findMany({
-      where: {
-        OR: [
-          { visibility: 'public' },
-          { visibility: 'private', authorId: userId }
-        ]
-      },
-      skip,
+    const cache = require('../../services/cache.service');
+    const cachedFeed = await cache.getFeed(userId, page, takeLimit);
+    if (cachedFeed) {
+      console.log(`[getFeedPosts] Cache hit: ${Date.now() - startTime}ms`);
+      return cachedFeed;
+    }
+
+    const posts = await this.prisma.post.findMany({
+      where: { OR: [{ visibility: 'public' }, { visibility: 'private', authorId: userId }] },
       take: takeLimit + 1,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        author: {
-          select: { id: true, firstName: true, lastName: true }
-        },
-        attachments: true,
-        _count: {
-          select: { comments: true, likes: true }
-        },
-        comments: {
-          where: { parentId: null },
-          take: 2,
-          orderBy: { createdAt: 'desc' },
-          include: {
-            author: { select: { id: true, firstName: true, lastName: true } },
-            _count: { select: { replies: true, likes: true } },
-            likes: {
-              where: { userId },
-              select: { id: true }
-            }
-          }
-        }
+      skip,
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: {
+        id: true, content: true, visibility: true, authorId: true,
+        authorFirstName: true, authorLastName: true, createdAt: true,
+        likesCount: true, commentsCount: true, hasAttachments: true, attachments: true,
+        likes: { where: { userId }, select: { id: true } }
       }
     });
+    console.log(`[getFeedPosts] DB: ${Date.now() - startTime}ms`);
 
-    const hasMore = fetchedPosts.length > takeLimit;
-    const posts = hasMore ? fetchedPosts.slice(0, takeLimit) : fetchedPosts;
+    if (posts.length === 0) return { posts: [], hasMore: false };
 
     const postIds = posts.map(p => p.id);
-    const [currentUserLikes, latestLikes] = postIds.length === 0
-      ? [[], []]
-      : await Promise.all([
-        this.prisma.like.findMany({
-          where: {
-            userId,
-            postId: { in: postIds }
-          },
-          select: { postId: true }
-        }),
+    const hasMore = posts.length > takeLimit;
+    const feedPosts = hasMore ? posts.slice(0, takeLimit) : posts;
+    const feedPostIds = feedPosts.map(p => p.id);
+    const feedPostIdSet = new Set(feedPostIds);
+
+    const [likersMap, commentMap] = await Promise.all([
+      cache.getPostLikersBatch(feedPostIds),
+      cache.getPostCommentsBatch(feedPostIds)
+    ]);
+
+    const likedBy = {};
+    const comments = {};
+    const missIds = new Set();
+
+    feedPosts.forEach(p => {
+      const lid = likersMap[p.id];
+      const cid = commentMap[p.id];
+      likedBy[p.id] = lid || [];
+      comments[p.id] = cid || [];
+      if (!lid && !cid) missIds.add(p.id);
+    });
+    console.log(`[getFeedPosts] Cache check: ${Date.now() - startTime}ms`);
+
+    if (missIds.size > 0) {
+      const midArr = [...missIds];
+      const [lRows, cRows] = await Promise.all([
         this.prisma.$queryRaw`
-          WITH ranked_likes AS (
-            SELECT
-              l."postId",
-              u.id AS "userId",
-              u."firstName",
-              u."lastName",
-              ROW_NUMBER() OVER (
-                PARTITION BY l."postId"
-                ORDER BY l."createdAt" DESC, l.id DESC
-              ) AS row_num
-            FROM "Like" l
-            JOIN "User" u ON u.id = l."userId"
-            WHERE l."postId" IN (${Prisma.join(postIds)})
-          )
-          SELECT "postId", "userId", "firstName", "lastName", row_num
-          FROM ranked_likes
-          WHERE row_num <= 5
-          ORDER BY "postId", row_num
-        `
+          SELECT p.id AS pid, l.uid AS uid, u."firstName" AS fn, u."lastName" AS ln FROM "Post" p
+          LEFT JOIN LATERAL (SELECT "userId" AS uid FROM "Like" WHERE "postId" = p.id ORDER BY "createdAt" DESC LIMIT 5) l ON TRUE
+          LEFT JOIN "User" u ON u.id = l.uid WHERE p.id IN (${Prisma.join(midArr)})`,
+        this.prisma.$queryRaw`
+          SELECT p.id AS pid, c.id AS cid, c.content AS cct, c."createdAt" AS cca, c."likesCount" AS lcc, c."repliesCount" AS rcc,
+            ca.id AS caid, ca."firstName" AS cfn, ca."lastName" AS cln, cl.id AS clid
+          FROM "Post" p
+          LEFT JOIN LATERAL (SELECT id, content, "createdAt", "likesCount", "repliesCount", "authorId" FROM "Comment" WHERE "postId" = p.id AND "parentId" IS NULL ORDER BY "createdAt" DESC LIMIT 2) c ON TRUE
+          LEFT JOIN "User" ca ON ca.id = c."authorId"
+          LEFT JOIN "Like" cl ON cl."commentId" = c.id AND cl."userId" = ${userId}
+          WHERE p.id IN (${Prisma.join(midArr)})`
       ]);
 
-    const likedPostIds = new Set(currentUserLikes.map(like => like.postId));
+      lRows.forEach(r => { if (r.uid && likedBy[r.pid]) likedBy[r.pid].push({ id: r.uid, name: `${r.fn} ${r.ln}`.trim() }); });
+      cRows.forEach(r => { if (r.cid) (comments[r.pid] = comments[r.pid] || []).push({ id: r.cid, author: { id: r.caid, name: `${r.cfn} ${r.cln}`.trim() }, content: r.cct, createdAt: r.cca, likes: Number(r.lcc), repliesCount: Number(r.rcc), isLiked: !!r.clid }); });
 
-    const likesByPostId = latestLikes.reduce((acc, like) => {
-      if (!acc[like.postId]) acc[like.postId] = [];
-      acc[like.postId].push({
-        id: like.userId,
-        name: `${like.firstName} ${like.lastName}`.trim(),
-      });
-      return acc;
-    }, {});
+      [...missIds].forEach(id => { if (likedBy[id]?.length) cache.setPostLikers(id, likedBy[id]); if (comments[id]?.length) cache.setPostComments(id, comments[id]); });
+    }
+    console.log(`[getFeedPosts] SQL: ${Date.now() - startTime}ms`);
 
-    return {
-      posts: posts.map(post => ({
-        ...this.formatPostAttachments(post),
-        isLiked: likedPostIds.has(post.id),
-        likesCount: post._count.likes,
-        likedBy: likesByPostId[post.id] || [],
-        commentCount: post._count.comments,
-        comments: post.comments.map(comment => this.formatComment(comment, post.id))
+    const result = {
+      posts: feedPosts.map(p => ({
+        id: p.id, content: p.content, visibility: p.visibility, createdAt: p.createdAt,
+        author: { id: p.authorId, firstName: p.authorFirstName, lastName: p.authorLastName, name: `${p.authorFirstName} ${p.authorLastName}`.trim() },
+        likesCount: p.likesCount, commentsCount: p.commentsCount, hasAttachments: p.hasAttachments,
+        isLiked: p.likes?.length > 0, likedBy: likedBy[p.id] || [],
+        attachments: p.attachments?.map(a => ({ ...a, fileUrl: this.formatAttachmentUrl(a.fileUrl) })) || [],
+        comments: (comments[p.id] || []).map(c => ({ id: c.id, postId: p.id, author: c.author, content: c.content, timestamp: this.formatTimeAgo(c.createdAt), likes: c.likes, isLiked: c.isLiked, repliesCount: c.repliesCount }))
       })),
       hasMore
     };
+
+    cache.setFeed(userId, page, takeLimit, result);
+    console.log(`[getFeedPosts] Done: ${Date.now() - startTime}ms`);
+    return result;
   }
 
   formatComment(comment, postId) {
@@ -184,9 +198,9 @@ class PostsService {
       },
       content: comment.content,
       timestamp: this.formatTimeAgo(comment.createdAt),
-      likes: comment._count?.likes || 0,
+      likes: comment.likesCount || 0,
       isLiked: comment.likes?.length > 0 || comment.isLiked || false,
-      repliesCount: comment._count?.replies || 0,
+      repliesCount: comment.repliesCount || 0,
     };
   }
 
@@ -209,12 +223,7 @@ class PostsService {
     const skip = (page - 1) * limit;
     
     const post = await this.prisma.post.findUnique({
-      where: { id: postId },
-      include: {
-        _count: {
-          select: { likes: true }
-        }
-      }
+      where: { id: postId }
     });
 
     if (!post) {
@@ -233,7 +242,7 @@ class PostsService {
       take: limit
     });
 
-    const totalLikes = post._count.likes;
+    const totalLikes = post.likesCount;
     const hasMore = skip + likers.length < totalLikes;
 
     return {

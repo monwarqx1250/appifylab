@@ -17,36 +17,54 @@ class CommentsService {
   }
 
   async createComment(userId, data) {
+    const { postId, parentId, content } = data;
+    const isReply = !!parentId;
+
     const comment = await this.prisma.comment.create({
       data: {
-        content: data.content,
-        postId: data.postId,
-        parentId: data.parentId || null,
+        content,
+        postId,
+        parentId: parentId || null,
         authorId: userId
-      },
+      }
+    });
+
+    if (isReply) {
+      await this.prisma.comment.update({
+        where: { id: parentId },
+        data: { repliesCount: { increment: 1 } }
+      });
+    } else {
+      await this.prisma.post.update({
+        where: { id: postId },
+        data: { commentsCount: { increment: 1 } }
+      });
+    }
+
+    await this.updateTopComments(postId);
+
+    const result = await this.prisma.comment.findUnique({
+      where: { id: comment.id },
       include: {
         author: {
           select: { id: true, firstName: true, lastName: true }
-        },
-        _count: {
-          select: { likes: true, replies: true }
         }
       }
     });
 
     return {
-      id: comment.id,
-      postId: comment.postId,
-      parentId: comment.parentId,
+      id: result.id,
+      postId: result.postId,
+      parentId: result.parentId,
       author: {
-        id: comment.author.id,
-        name: `${comment.author.firstName} ${comment.author.lastName}`.trim()
+        id: result.author.id,
+        name: `${result.author.firstName} ${result.author.lastName}`.trim()
       },
-      content: comment.content,
-      timestamp: this.formatTimeAgo(comment.createdAt),
-      likes: comment._count.likes,
+      content: result.content,
+      timestamp: this.formatTimeAgo(result.createdAt),
+      likes: 0,
       isLiked: false,
-      repliesCount: comment._count.replies
+      repliesCount: 0
     };
   }
 
@@ -66,9 +84,6 @@ class CommentsService {
         include: {
           author: {
             select: { id: true, firstName: true, lastName: true }
-          },
-          _count: {
-            select: { likes: true, replies: true }
           },
           likes: userId ? {
             where: { userId },
@@ -92,9 +107,9 @@ class CommentsService {
       },
       content: comment.content,
       timestamp: this.formatTimeAgo(comment.createdAt),
-      likes: comment._count.likes,
+      likes: comment.likesCount,
       isLiked: userId ? comment.likes?.length > 0 : false,
-      repliesCount: comment._count.replies
+      repliesCount: comment.repliesCount
     }));
 
     return {
@@ -117,9 +132,6 @@ class CommentsService {
         include: {
           author: {
             select: { id: true, firstName: true, lastName: true }
-          },
-          _count: {
-            select: { likes: true, replies: true }
           },
           likes: userId ? {
             where: { userId },
@@ -144,9 +156,9 @@ class CommentsService {
       },
       content: reply.content,
       timestamp: this.formatTimeAgo(reply.createdAt),
-      likes: reply._count.likes,
+      likes: reply.likesCount,
       isLiked: userId ? reply.likes?.length > 0 : false,
-      repliesCount: reply._count.replies
+      repliesCount: reply.repliesCount
     }));
 
     return {
@@ -164,9 +176,6 @@ class CommentsService {
         author: {
           select: { id: true, firstName: true, lastName: true }
         },
-        _count: {
-          select: { likes: true, replies: true }
-        },
         parent: {
           select: { postId: true }
         }
@@ -182,10 +191,33 @@ class CommentsService {
         name: `${comment.author.firstName} ${comment.author.lastName}`.trim()
       },
       content: comment.content,
-      likes: comment._count.likes,
-      repliesCount: comment._count.replies,
+      likes: comment.likesCount,
+      repliesCount: comment.repliesCount,
       parent: comment.parent ? { postId: comment.parent.postId } : null
     }));
+  }
+
+  async updateTopComments(postId) {
+    const topComments = await this.prisma.$queryRaw`
+      SELECT c.id, c.content, c."createdAt", c."likesCount", c."repliesCount", c."authorId", u."firstName", u."lastName"
+      FROM "Comment" c
+      JOIN "User" u ON u.id = c."authorId"
+      WHERE c."postId" = ${postId} AND c."parentId" IS NULL
+      ORDER BY c."createdAt" DESC
+      LIMIT 2
+    `;
+    const comments = topComments.map(c => ({
+      id: c.id,
+      author: { id: c.authorId, firstName: c.firstName, lastName: c.lastName },
+      content: c.content,
+      createdAt: c.createdAt,
+      likesCount: Number(c.likesCount),
+      repliesCount: Number(c.repliesCount)
+    }));
+    await this.prisma.post.update({
+      where: { id: postId },
+      data: { topComments: JSON.stringify(comments) }
+    });
   }
 }
 
