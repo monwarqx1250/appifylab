@@ -183,7 +183,7 @@ class PostsService {
           SELECT
             c.id,
             c.content,
-            c."createdAt" as "commentCreatedAt",
+            c."createdAt",
             c."postId",
             json_build_object(
               'id', u.id,
@@ -197,7 +197,7 @@ class PostsService {
           LIMIT 2
         ) c ON true
         WHERE p.id = ANY(ARRAY[${Prisma.join(postIds)}])
-        ORDER BY c."commentCreatedAt" DESC;`,
+        ORDER BY c."createdAt" DESC;`,
 
       this.prisma.$queryRaw`
         SELECT l.*
