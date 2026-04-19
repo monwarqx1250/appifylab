@@ -69,9 +69,11 @@ export default function FeedPage() {
 			});
 			
 			const postsList = data.posts;
-			const transformed = postsList.map(post => 
-				transformPost(post, commentsByPostId[post.id] || [], likesByPostId[post.id] || [])
-			);
+			const transformed = postsList.map(post => {
+				const postComments = post.id ? (commentsByPostId[post.id] || []) : [];
+				const postLikes = post.id ? (likesByPostId[post.id] || []) : [];
+				return transformPost(post, postComments, postLikes);
+			});
 			if (!nextCursor) {
 				setPosts(transformed);
 			} else {

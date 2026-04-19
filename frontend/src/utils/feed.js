@@ -1,5 +1,7 @@
 export function formatTimeAgo(dateString) {
+  if (!dateString) return 'Just now';
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return 'Just now';
   const now = new Date();
   const diffMs = now - date;
   const diffMins = Math.floor(diffMs / 60000);
@@ -7,9 +9,9 @@ export function formatTimeAgo(dateString) {
   const diffDays = Math.floor(diffMs / 86400000);
   
   if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-  if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  return `${diffDays}d`;
 }
 
 export function transformPost(post, postComments = [], postLikes = []) {
@@ -20,25 +22,25 @@ export function transformPost(post, postComments = [], postLikes = []) {
       name: post.author?.name || `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim(),
       avatar: 'assets/images/post_img.png',
     },
-    timestamp: formatTimeAgo(post.createdAt),
+    timestamp: formatTimeAgo(post?.createdAt),
     visibility: post.visibility,
     title: post.content || '',
     image: null,
     reactions: [],
     likesCount: post.likesCount || 0,
     isLiked: post.isLiked || false,
-    likedBy: postLikes.map(u => ({
+    likedBy: (postLikes || []).filter(u => u?.user?.id).map(u => ({
       id: u.user.id,
-      name: `${u.user.firstName} ${u.user.lastName}`.trim()
+      name: `${u.user.firstName || ''} ${u.user.lastName || ''}`.trim()
     })),
     commentCount: post.commentsCount || 0,
     shareCount: 0,
-    comments: postComments.map(c => ({
+    comments: (postComments || []).filter(c => c?.id).map(c => ({
       id: c.id,
       postId: c.postId,
       author: {
-        id: c.author.id,
-        name: `${c.author.firstName} ${c.author.lastName}`.trim()
+        id: c.author?.id,
+        name: `${c.author?.firstName || ''} ${c.author?.lastName || ''}`.trim()
       },
       content: c.content,
       timestamp: formatTimeAgo(c.createdAt),
@@ -70,7 +72,7 @@ export function transformComment(comment) {
     content: comment.content,
     likes: comment.likes || 0,
     isLiked: comment.isLiked || false,
-    timestamp: comment.timestamp || '1m',
+    timestamp: comment.timestamp || formatTimeAgo(comment?.createdAt),
     repliesCount: comment.repliesCount || 0,
     replies: comment.replies || [],
   };
