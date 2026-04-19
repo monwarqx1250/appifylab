@@ -95,54 +95,72 @@ class PostsService {
   }
 
   async getFeedPosts(userId, page, limit) {
+    const {Prisma} = require('@prisma/client')
     const skip = (page - 1) * limit;
-    const takeLimit = parseInt(limit, 10);
+    const takeLimit = 10;
     const startTime = Date.now();
 
-    const posts = await this.prisma.post.findMany({
-      where: {
-        visibility: 'public'
-      },
-      include: {
-        likes: {
-          where: {
-            userId
-          }
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-      take: takeLimit
-    })
+    const posts = await this.prisma.$queryRaw`
+      SELECT
+      p.*,
+
+      EXISTS (
+        SELECT 1
+        FROM "Like" l
+        WHERE l."postId" = p.id
+          AND l."userId" = ${userId}
+      ) AS "isLiked"
+
+      FROM "Post" p
+      WHERE p."visibility" = 'public'
+      ORDER BY p."createdAt" DESC
+      LIMIT ${takeLimit};
+    `
     const postIds = posts.map(post => post.id)
     const [comments, likes] = await this.prisma.$transaction([
-      this.prisma.comment.findMany({
-        where: {
-          postId: { in: postIds }
-        },
-        include: {
-          author: {
-            select: {id: true, firstName: true, lastName: true}
-          }
-        },
-        take: 2
-      }),
-      this.prisma.like.findMany({
-        where: {
-          postId: { in: postIds },
-        },
-        take: 5,
-        include: {
-          user: {
-            select: {id: true, firstName: true, lastName: true}
-          }
-        }
-      })
+      this.prisma.$queryRaw`
+      SELECT c.*
+      FROM "Post" p
+      JOIN LATERAL (
+        SELECT
+          c.id,
+          c.content,
+          c."createdAt",
+          c."postId",
+          json_build_object(
+            'id', u.id,
+            'firstName', u."firstName",
+            'lastName', u."lastName"
+          ) AS author
+        FROM "Comment" c
+        JOIN "User" u ON u.id = c."authorId"
+        WHERE c."postId" = p.id
+        ORDER BY c."createdAt" DESC
+        LIMIT 2
+      ) c ON true
+      WHERE p.id = ANY(ARRAY[${Prisma.join(postIds)}]);`,
+
+
+      this.prisma.$queryRaw`
+      SELECT l.*
+      FROM "Post" p
+      JOIN LATERAL (
+        SELECT
+          l."postId",
+          json_build_object(
+            'id', u.id,
+            'firstName', u."firstName",
+            'lastName', u."lastName"
+          ) AS user
+        FROM "Like" l
+        JOIN "User" u ON u.id = l."userId"
+        WHERE l."postId" = p.id
+        ORDER BY l."createdAt" DESC
+        LIMIT 5
+      ) l ON true
+      WHERE p.id = ANY(ARRAY[${Prisma.join(postIds)}]);`
     ])
-    console.log({
-      posts : posts[0],
-      comments: comments[0],
-      likes: likes[0]
-    })
+    console.log(posts)
     console.log(`took ${Date.now() - startTime}ms`)
 
     return {}
