@@ -41,8 +41,6 @@ class CommentsService {
       });
     }
 
-    await this.updateTopComments(postId);
-
     const result = await this.prisma.comment.findUnique({
       where: { id: comment.id },
       include: {
@@ -195,29 +193,6 @@ class CommentsService {
       repliesCount: comment.repliesCount,
       parent: comment.parent ? { postId: comment.parent.postId } : null
     }));
-  }
-
-  async updateTopComments(postId) {
-    const topComments = await this.prisma.$queryRaw`
-      SELECT c.id, c.content, c."createdAt", c."likesCount", c."repliesCount", c."authorId", u."firstName", u."lastName"
-      FROM "Comment" c
-      JOIN "User" u ON u.id = c."authorId"
-      WHERE c."postId" = ${postId} AND c."parentId" IS NULL
-      ORDER BY c."createdAt" DESC
-      LIMIT 2
-    `;
-    const comments = topComments.map(c => ({
-      id: c.id,
-      author: { id: c.authorId, firstName: c.firstName, lastName: c.lastName },
-      content: c.content,
-      createdAt: c.createdAt,
-      likesCount: Number(c.likesCount),
-      repliesCount: Number(c.repliesCount)
-    }));
-    await this.prisma.post.update({
-      where: { id: postId },
-      data: { topComments: JSON.stringify(comments) }
-    });
   }
 }
 

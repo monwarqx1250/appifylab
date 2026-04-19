@@ -29,18 +29,6 @@ class LikesService {
           data: { likesCount: { decrement: 1 } }
         });
       }
-if (isPost) {
-        await this.prisma.post.update({
-          where: { id: entityId },
-          data: { likesCount: { decrement: 1 } }
-        });
-        await this.updateTopLikers(entityId);
-      } else {
-        await this.prisma.comment.update({
-          where: { id: entityId },
-          data: { likesCount: { decrement: 1 } }
-        });
-      }
       return { action: 'unliked', liked: false };
     } else {
       const likeData = isPost 
@@ -55,7 +43,6 @@ if (isPost) {
           where: { id: entityId },
           data: { likesCount: { increment: 1 } }
         });
-        await this.updateTopLikers(entityId);
       } else {
         await this.prisma.comment.update({
           where: { id: entityId },
@@ -64,21 +51,6 @@ if (isPost) {
       }
       return { action: 'liked', liked: true };
     }
-  }
-
-  async updateTopLikers(postId) {
-    const topLikers = await this.prisma.$queryRaw`
-      SELECT u.id, u."firstName", u."lastName" FROM "Like" l
-      JOIN "User" u ON u.id = l."userId"
-      WHERE l."postId" = ${postId}
-      ORDER BY l."createdAt" DESC, l.id DESC
-      LIMIT 5
-    `;
-    const likers = topLikers.map(u => ({ id: u.id, name: `${u.firstName} ${u.lastName}`.trim() }));
-    await this.prisma.post.update({
-      where: { id: postId },
-      data: { topLikers: JSON.stringify(likers) }
-    });
   }
 
   async getCommentLikers(commentId, page = 1, limit = 20) {
