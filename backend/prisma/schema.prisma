@@ -31,8 +31,6 @@ model Post {
   likesCount     Int      @default(0)
   commentsCount  Int      @default(0)
   hasAttachments Boolean @default(false)
-  topLikers      Json?    @default("[]")
-  topComments    Json?    @default("[]")
 
   author         User             @relation(fields: [authorId], references: [id])
   attachments   PostAttachment[]
@@ -68,6 +66,9 @@ model Comment {
   parent    Comment? @relation("CommentToReply", fields: [parentId], references: [id])
   replies  Comment[] @relation("CommentToReply")
   likes    Like[]
+
+  @@index([postId, createdAt(sort: Desc)])
+  @@index([authorId, createdAt(sort: Desc)])
 }
 
 model Like {
@@ -84,4 +85,7 @@ model Like {
   @@unique([userId, postId])
   @@unique([userId, commentId])
   @@index([postId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([commentId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, postId, createdAt(sort: Desc), id(sort: Desc)])
+  @@index([userId, commentId, createdAt(sort: Desc), id(sort: Desc)])
 }
