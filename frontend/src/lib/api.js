@@ -73,8 +73,8 @@ export const api = {
 };
 
 export const postsApi = {
-  getAll: (page = 1, limit = 10) => 
-    api.get(`/posts?page=${page}&limit=${limit}`),
+  getAll: (cursor = null, limit = 10) => 
+    api.get(`/posts?limit=${limit}${cursor ? `&cursor=${cursor}` : ''}`),
   
   getById: (id) => api.get(`/posts/${id}`),
   

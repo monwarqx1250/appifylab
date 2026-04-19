@@ -25,7 +25,7 @@ export default function FeedPage() {
 	const [isDarkMode, setIsDarkMode] = useState(false);
 	const [posts, setPosts] = useState([]);
 	const [postsLoading, setPostsLoading] = useState(true);
-	const [page, setPage] = useState(1);
+	const [cursor, setCursor] = useState(null);
 	const [hasMore, setHasMore] = useState(true);
 	const [loadingMore, setLoadingMore] = useState(false);
 	const loadMoreRef = useRef(null);
@@ -35,14 +35,14 @@ export default function FeedPage() {
 	const { likePost, likeComment, loading: likeLoading } = useLike();
 	const { fetchComments, addComment, replyToComment, loading: commentLoading } = useComments();
 
-	const fetchPosts = async (pageNum = 1) => {
-		if (pageNum === 1) {
+	const fetchPosts = async (nextCursor = null) => {
+		if (!nextCursor) {
 			setPostsLoading(true);
 		} else {
 			setLoadingMore(true);
 		}
 		
-		const result = await postsApi.getAll(pageNum);
+		const result = await postsApi.getAll(nextCursor);
 		if (result.ok) {
 			const data = result.data;
 			if (!data || !data.posts) {
@@ -53,7 +53,7 @@ export default function FeedPage() {
 			}
 			const postsList = data.posts;
 			const transformed = postsList.map(transformPost);
-			if (pageNum === 1) {
+			if (!nextCursor) {
 				setPosts(transformed);
 			} else {
 				setPosts(prev => {
@@ -63,11 +63,12 @@ export default function FeedPage() {
 				});
 			}
 			setHasMore(data.hasMore === true);
+			setCursor(data.nextCursor);
 		} else {
 			setHasMore(false);
 		}
 		
-		if (pageNum === 1) {
+		if (!nextCursor) {
 			setPostsLoading(false);
 		} else {
 			setLoadingMore(false);
@@ -84,7 +85,7 @@ export default function FeedPage() {
 	useEffect(() => {
 		if (isAuthenticated && !postsFetchedRef.current) {
 			postsFetchedRef.current = true;
-			fetchPosts(1);
+			fetchPosts(null);
 		}
 	}, [isAuthenticated]);
 
@@ -93,11 +94,9 @@ export default function FeedPage() {
 
 		const observer = new IntersectionObserver(
 			(entries) => {
-				if (entries[0].isIntersecting && !fetchingRef.current) {
+				if (entries[0].isIntersecting && !fetchingRef.current && cursor) {
 					fetchingRef.current = true;
-					const nextPage = page + 1;
-					setPage(nextPage);
-					fetchPosts(nextPage);
+					fetchPosts(cursor);
 				}
 			},
 			{ rootMargin: '200px' }
@@ -108,7 +107,7 @@ export default function FeedPage() {
 		}
 
 		return () => observer.disconnect();
-	}, [hasMore, loadingMore, postsLoading, page, fetchPosts]);
+	}, [hasMore, loadingMore, postsLoading, cursor, fetchPosts]);
 
 	const handlePostCreated = useCallback((newPost) => {
 		console.log('handlePostCreated - raw:', newPost);
