@@ -27,8 +27,8 @@ module.exports = async function (fastify, opts) {
 
   fastify.get('/posts', { schema: getPostsSchema }, async (request, reply) => {
     try {
-      const { page, limit } = request.query;
-      const posts = await postsService.getFeedPosts(request.user.id, page, limit);
+      const { cursor, limit } = request.query;
+      const posts = await postsService.getFeedPosts(request.user.id, cursor, limit);
       reply.code(200).send(posts);
     } catch (err) {
       fastify.log.error(err);

@@ -76,12 +76,12 @@ const createPostSchema = {
 const getPostsSchema = {
   tags: ['posts'],
   summary: 'Get feed posts',
-  description: 'Returns a paginated list of posts. Only public posts and user\'s own private posts are returned.',
+  description: 'Returns a paginated list of posts with cursor-based pagination. Only public posts are returned.',
   querystring: {
     type: 'object',
     properties: {
-      page: { type: 'integer', minimum: 1, default: 1 },
-      limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 }
+      cursor: { type: 'string', description: 'Cursor for pagination (last post id from previous response)' },
+      limit: { type: 'integer', minimum: 1, maximum: 100, default: 10 }
     }
   },
   response: {
@@ -96,6 +96,26 @@ const getPostsSchema = {
               id: { type: 'string' },
               content: { type: 'string' },
               visibility: { type: 'string' },
+              authorId: { type: 'string' },
+              authorFirstName: { type: 'string' },
+              authorLastName: { type: 'string' },
+              createdAt: { type: 'string', format: 'date-time' },
+              commentsCount: { type: 'integer' },
+              hasAttachments: { type: 'boolean' },
+              likesCount: { type: 'integer' },
+              isLiked: { type: 'boolean' }
+            }
+          }
+        },
+        comments: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              id: { type: 'string' },
+              content: { type: 'string' },
+              createdAt: { type: 'string', format: 'date-time' },
+              postId: { type: 'string' },
               author: {
                 type: 'object',
                 properties: {
@@ -103,65 +123,29 @@ const getPostsSchema = {
                   firstName: { type: 'string' },
                   lastName: { type: 'string' }
                 }
-              },
-              attachments: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    fileUrl: { type: 'string' },
-                    fileType: { type: 'string' }
-                  }
-                }
-              },
-              createdAt: { type: 'string', format: 'date-time' },
-              _count: {
+              }
+            }
+          }
+        },
+        likes: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              postId: { type: 'string' },
+              user: {
                 type: 'object',
                 properties: {
-                  comments: { type: 'integer' },
-                  likes: { type: 'integer' }
-                }
-              },
-              isLiked: { type: 'boolean' },
-              likesCount: { type: 'integer' },
-              likedBy: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    name: { type: 'string' }
-                  }
-                }
-              },
-              commentCount: { type: 'integer' },
-              comments: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    id: { type: 'string' },
-                    postId: { type: 'string' },
-                    author: {
-                      type: 'object',
-                      properties: {
-                        id: { type: 'string' },
-                        name: { type: 'string' }
-                      }
-                    },
-                    content: { type: 'string' },
-                    timestamp: { type: 'string' },
-                    likes: { type: 'integer' },
-                    isLiked: { type: 'boolean' },
-                    repliesCount: { type: 'integer' }
-                  }
+                  id: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' }
                 }
               }
             }
           }
         },
-        hasMore: { type: 'boolean' }
+        hasMore: { type: 'boolean' },
+        nextCursor: { type: 'string', nullable: true }
       }
     },
     401: {
