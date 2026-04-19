@@ -12,25 +12,40 @@ export function formatTimeAgo(dateString) {
   return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
 }
 
-export function transformPost(post) {
+export function transformPost(post, postComments = [], postLikes = []) {
   return {
     id: post.id,
     author: {
-      id: post.author?.id,
-      name: post.author?.name || `${post.author?.firstName || ''} ${post.author?.lastName || ''}`.trim(),
+      id: post.authorId || post.author?.id,
+      name: post.author?.name || `${post.authorFirstName || ''} ${post.authorLastName || ''}`.trim(),
       avatar: 'assets/images/post_img.png',
     },
     timestamp: formatTimeAgo(post.createdAt),
     visibility: post.visibility,
-    title: post?.content || '',
-    image: post.attachments?.[0]?.fileUrl || null,
+    title: post.content || '',
+    image: null,
     reactions: [],
-    likesCount: post.likesCount || post._count?.likes || 0,
+    likesCount: post.likesCount || 0,
     isLiked: post.isLiked || false,
-    likedBy: post.likedBy || [],
-    commentCount: post.commentCount ?? post._count?.comments ?? 0,
+    likedBy: postLikes.map(u => ({
+      id: u.user.id,
+      name: `${u.user.firstName} ${u.user.lastName}`.trim()
+    })),
+    commentCount: post.commentsCount || 0,
     shareCount: 0,
-    comments: post.comments || [],
+    comments: postComments.map(c => ({
+      id: c.id,
+      postId: c.postId,
+      author: {
+        id: c.author.id,
+        name: `${c.author.firstName} ${c.author.lastName}`.trim()
+      },
+      content: c.content,
+      timestamp: formatTimeAgo(c.createdAt),
+      likes: 0,
+      isLiked: false,
+      repliesCount: 0
+    })),
   };
 }
 

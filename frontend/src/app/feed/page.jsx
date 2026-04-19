@@ -51,8 +51,27 @@ export default function FeedPage() {
 				fetchingRef.current = false;
 				return;
 			}
+			
+			const commentsByPostId = {};
+			(data.comments || []).forEach(c => {
+				if (!commentsByPostId[c.postId]) {
+					commentsByPostId[c.postId] = [];
+				}
+				commentsByPostId[c.postId].push(c);
+			});
+			
+			const likesByPostId = {};
+			(data.likes || []).forEach(l => {
+				if (!likesByPostId[l.postId]) {
+					likesByPostId[l.postId] = [];
+				}
+				likesByPostId[l.postId].push(l);
+			});
+			
 			const postsList = data.posts;
-			const transformed = postsList.map(transformPost);
+			const transformed = postsList.map(post => 
+				transformPost(post, commentsByPostId[post.id] || [], likesByPostId[post.id] || [])
+			);
 			if (!nextCursor) {
 				setPosts(transformed);
 			} else {
